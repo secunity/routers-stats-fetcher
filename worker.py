@@ -286,4 +286,3 @@ if __name__ == '__main__':
         _scheduler.shutdown()
         _logger.warning('scheduler stopped')
         _logger.warning('quiting')
-
