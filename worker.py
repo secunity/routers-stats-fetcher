@@ -7,6 +7,7 @@ import sys
 from abc import ABC, abstractmethod
 import logging
 from collections import Iterable
+# from threading import Lock
 
 import paramiko
 import requests
@@ -26,9 +27,51 @@ _SEND_RESULT_DEFAULTS = {
     'url_method': 'POST'
 }
 
+_DEFAULTS = {
+    'config': '/etc/secunity/routers-stats-fetcher.conf',
+}
+
 _scheduler = None
 
 _logger = None
+
+# class CurJobManager:
+#
+#     _cur_job = {}
+#     _cur_job_lock = Lock()
+#
+#     @classmethod
+#     def signal_start(cls, job, **kwargs):
+#         with cls._cur_job_lock:
+#             if cls._cur_job and cls._cur_job['id'] != job.id:
+#                 _logger.error(f"didn't get end signal from id {cls._cur_job['id']}")
+#
+#             if not cls._cur_job or cls._cur_job['id'] != job.id:
+#                 cls._cur_job = {
+#                     'time': datetime.datetime.utcnow(),
+#                     'id': job.id
+#                 }
+#
+#     @classmethod
+#     def signal_end(cls, job, **kwargs):
+#         with cls._cur_job_lock:
+#             if cls._cur_job['id'] != job.id:
+#                 _logger.error(f"signaled end with id {job.id} but running conf shows id {cls._cur_job['id']}")
+#             else:
+#                 cls._cur_job = {}
+#
+#     @classmethod
+#     def check_cur_job(cls):
+#         with cls._cur_job_lock:
+#             if not cls._cur_job:
+#                 restart_job = False
+#             elif datetime.datetime.utcnow() - cls._cur_job['time'] > datetime.timedelta(seconds=50):
+#                 restart_job = True
+#             else:
+#                 restart_job = False
+#
+#             if restart_job:
+#                 _logger.error(f"Job {cls._cur_job['_id']} should be restarted. stuck since {cls._cur_job['time']}")
 
 
 class CommandWorker(ABC):
@@ -155,7 +198,7 @@ def send_result(success, raw_samples, url=None, error=None, **kwargs):
 
     func = getattr(requests, kwargs['url_method'].lower())
     response = func(url=url, json=result)
-    return 200 <= response.status_code <= 210
+    return 200 <= response.status_code <= 210, error
 
 
 def _start_scheduler(**kwargs):
@@ -169,17 +212,23 @@ def _start_scheduler(**kwargs):
     _scheduler = BackgroundScheduler(executors={'default': ThreadPoolExecutor(30)},
                                      job_defaults={'max_instances': 1},
                                      timezone=pytz.utc)
+    # _scheduler.add_job(func=CurJobManager.check_cur_job,
+    #                    trigger=IntervalTrigger(seconds=5),
+    #                    max_instances=1,
+    #                    next_run_time=datetime.datetime.utcnow() + datetime.timedelta(seconds=5))
 
     _scheduler.add_job(func=_work,
                        trigger=IntervalTrigger(minutes=1),
                        kwargs=kwargs,
                        max_instances=1,
                        next_run_time=datetime.datetime.utcnow() + datetime.timedelta(seconds=1))
+
     _scheduler.start()
     _logger.debug('scheduler and jobs initialized')
 
 def _work(**kwargs):
     _logger.debug('starting new iteration')
+    # CurJobManager.signal_start()
     success, error, raw_samples = True, None, []
     try:
         con_params = {k: v for k, v in kwargs.items() if not k.startswith('url') and k not in ('identifier')}
@@ -249,30 +298,31 @@ if __name__ == '__main__':
     import time
 
     parser = argparse.ArgumentParser(description='Cisco Router flows statistics fetcher - Secunity DDoS Inhibitor')
-    parser.add_argument('-c', '--config', type=str, help='Config file (overriding all other options)')
-    parser.add_argument('-l', '--logfile', type=str, help='File to log to. default: ')
+    parser.add_argument('-c', '--config', type=str, help='Config file (overriding all other options)', default=_DEFAULTS['config'])
+    parser.add_argument('-l', '--logfile', type=str, help='File to log to. default: ', default=None)
     parser.add_argument('-v', '--verbose', type=bool, help='Indicates whether to log verbose data', default=False)
-    # parser.add_argument('-v', '--vendor', type=str, help='Router vendor')
-    parser.add_argument('-s', '--host', '--ip', type=str, help='Router IP') # , required=True
-    parser.add_argument('-p', '--port', type=int, help='SSH port', default=22) #, required=True
-    parser.add_argument('-u', '--user', '--username', type=str, help='SSH user') #, required=True
-    parser.add_argument('-w', '--password', type=str, help='SSH password', default='')
-    parser.add_argument('-k', '--key_filename', type=str, help='SSH Key Filename', default='')
-    parser.add_argument('--identifier', '--id', type=str, help='Device ID', default='') # , required=True
-    parser.add_argument('--url', type=str, help='The URL to use for remove server', default='')
-    parser.add_argument('--url_scheme', type=str, help='Remote server URL scheme', default=_SEND_RESULT_DEFAULTS['url_scheme'])
-    parser.add_argument('--url_host', type=str, help='Remote server URL hostname', default=_SEND_RESULT_DEFAULTS['url_host'])
+    parser.add_argument('-s', '--host', '--ip', type=str, help='Router IP', default=None)
+    parser.add_argument('-p', '--port', type=int, help='SSH port', default=None)
+    parser.add_argument('-u', '--user', '--username', type=str, help='SSH user', default=None)
+    parser.add_argument('-w', '--password', type=str, help='SSH password', default=None)
+    parser.add_argument('-k', '--key_filename', type=str, help='SSH Key Filename', default=None)
+    parser.add_argument('--identifier', '--id', type=str, help='Device ID', default=None)
+    parser.add_argument('--url', type=str, help='The URL to use for remove server', default=None)
+    parser.add_argument('--url_scheme', type=str, help='Remote server URL scheme', default=None)
+    parser.add_argument('--url_host', type=str, help='Remote server URL hostname', default=None)
     parser.add_argument('--url_port', type=int, help='Remote server URL port', default=0)
-    parser.add_argument('--url_path', type=str, help='Remote server URL path', default=_SEND_RESULT_DEFAULTS['url_path'])
-    parser.add_argument('--url_method', type=str, help='Remote server URL method', default=_SEND_RESULT_DEFAULTS['url_method'])
+    parser.add_argument('--url_path', type=str, help='Remote server URL path', default=None)
+    parser.add_argument('--url_method', type=str, help='Remote server URL method', default=None)
 
     args = parser.parse_args()
     args = vars(args)
 
     # args['config'] = os.path.join(os.getcwd(), 'sample.conf')
 
-    if args.get('config'):
-        args = _parse_config(args['config'])
+    config = args['config']
+    if config:
+        config = _parse_config(config)
+        args.update(config)
 
     _init_logger(**args)
 
@@ -282,7 +332,7 @@ if __name__ == '__main__':
         while True:
             time.sleep(1)
     except Exception as ex:
-        _logger.warning(f'Stop signal recieved, shuting scheduler: {str(ex)}')
+        _logger.warning(f'Stop signal recieved, shutting down scheduler: {str(ex)}')
         _scheduler.shutdown()
         _logger.warning('scheduler stopped')
         _logger.warning('quiting')
