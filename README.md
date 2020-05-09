@@ -9,7 +9,7 @@ The on-prem agent requires a python (at least 3.6) script to run continuously on
 The python script can be initialized with a config file (JSON - see [routers-stats-fetcher.conf](routers-stats-fetcher.conf)) or by passing command line parameters
 
 ### Script/Config Arguments
-```bash
+```shell script
 $ ./worker.py -h
 usage: worker.py [-h] [-c CONFIG] [-l LOGFILE] [-v VERBOSE] [-s HOST]
                  [-p PORT] [-u USER] [-w PASSWORD] [-k KEY_FILENAME]
@@ -80,34 +80,40 @@ TODO:
 This is the recommended method at the moment as it does not require keeping the config file on the host machine.
 
 1. Download the Dockerfile from which to build the local image (see [Dockerfile](Dockerfile))
-```bash
+```shell script
 $ curl -L https://github.com/secunity/routers-stats-fetcher/raw/master/Dockerfile -o Dockerfile
 ```
+
 2. Build the local image (replace *IMAGE_NAME*)
-```
+```shell script
 $ docker build --rm -t IMAGE_NAME .
 ```
+
 3. Download the config file
-```bash
+```shell script
 $ curl -L https://github.com/secunity/routers-stats-fetcher/raw/master/routers-stats-fetcher.conf -o routers-stats-fetcher.conf
 ```
+
 4. Edit the config file with your favorite editor
-```bash
+```shell script
 $ vi routers-stats-fetcher.conf
 ```
+
 5. Create a new container from the local image (replace *CONTAINER_NAME*)
-```bash
+```shell script
 $ docker create -it \
 --name CONTAINER_NAME \
 --restart unless-stopped \
 IMAGE_NAME
 ```
+
 6. Copy the edited config file inside the docker container
-```bash
+```shell script
 $ docker cp routers-stats-fetcher.conf CONTAINER_NAME:/opt/routers-stats-fetcher/routers-stats-fetcher.conf
 ```
+
 7. Start the container
-```bash
+```shell script
 $ docker start CONTAINER_NAME
 ```
 
@@ -117,24 +123,37 @@ it is utilizing an internal scheduler for that purpose.
 Using a process control system (such as [supervisord](http://supervisord.org/)) is highly recommended.
 
 1. Create the python virtual environment
- ```bash
+ ```shell script
 $ python3 -m virtualenv venv
 ```
 
 2. Active virtual environment
-```bash
+```shell script
 $ source venv/bin/activate
 ```
 
 3. Install the requirements
-```bash
+```shell script
 $ pip install -r https://github.com/secunity/routers-stats-fetcher/raw/master/requirements.txt
 ``` 
 
 4. Download and edit the config file
+```shell script
+$ curl -L https://github.com/secunity/routers-stats-fetcher/raw/master/routers-stats-fetcher.conf -o routers-stats-fetcher.conf
+$ vi routers-stats-fetcher.conf
+```
 
+5. Download the python script
+```shell script
+$ curl -L https://github.com/secunity/routers-stats-fetcher/blob/master/worker.py -o worker.py
+```
 
-5. Run the script 
-```bash
-$ python worker.py -c routers-stats-fetcher.conf
+6. Change the script run permissions
+```shell script
+$ chmod 777 worker.py
+```
+
+7. Run the script
+```shell script
+$ python worker.py
 ``` 
