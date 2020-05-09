@@ -9,7 +9,6 @@ import sys
 from abc import ABC, abstractmethod
 import logging
 from collections import Iterable
-# from threading import Lock
 
 import paramiko
 import requests
@@ -30,50 +29,40 @@ _SEND_RESULT_DEFAULTS = {
 }
 
 _DEFAULTS = {
-    'config': '/etc/secunity/routers-stats-fetcher.conf',
+    'config': '/opt/routers-stats-fetcher/routers-stats-fetcher.conf',
 }
 
 _scheduler = None
 
-_logger = None
 
-# class CurJobManager:
-#
-#     _cur_job = {}
-#     _cur_job_lock = Lock()
-#
-#     @classmethod
-#     def signal_start(cls, job, **kwargs):
-#         with cls._cur_job_lock:
-#             if cls._cur_job and cls._cur_job['id'] != job.id:
-#                 _logger.error(f"didn't get end signal from id {cls._cur_job['id']}")
-#
-#             if not cls._cur_job or cls._cur_job['id'] != job.id:
-#                 cls._cur_job = {
-#                     'time': datetime.datetime.utcnow(),
-#                     'id': job.id
-#                 }
-#
-#     @classmethod
-#     def signal_end(cls, job, **kwargs):
-#         with cls._cur_job_lock:
-#             if cls._cur_job['id'] != job.id:
-#                 _logger.error(f"signaled end with id {job.id} but running conf shows id {cls._cur_job['id']}")
-#             else:
-#                 cls._cur_job = {}
-#
-#     @classmethod
-#     def check_cur_job(cls):
-#         with cls._cur_job_lock:
-#             if not cls._cur_job:
-#                 restart_job = False
-#             elif datetime.datetime.utcnow() - cls._cur_job['time'] > datetime.timedelta(seconds=50):
-#                 restart_job = True
-#             else:
-#                 restart_job = False
-#
-#             if restart_job:
-#                 _logger.error(f"Job {cls._cur_job['_id']} should be restarted. stuck since {cls._cur_job['time']}")
+def _init_logger(logfile=None, verbose=False, **kwargs):
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG if verbose else logging.WARNING)
+
+    handler = logging.FileHandler(logfile) if logfile else logging.StreamHandler(sys.stdout)
+    formatter = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    handler.setFormatter(formatter)
+
+    logger.addHandler(handler)
+    return logger
+
+class logMeta(type):
+
+    def __getattr__(self, item):
+        if item.upper() in self._methods:
+            return getattr(self._log(), item.lower())
+
+class log(metaclass=logMeta):
+
+    _logger = None
+
+    _methods = ('CRITICAL', 'FATAL', 'ERROR', 'WARNING', 'WARN', 'INFO', 'DEBUG', 'EXCEPTION')
+
+    @classmethod
+    def _log(cls):
+        if not cls._logger:
+            cls._logger = _init_logger()
+        return cls._logger
 
 
 class CommandWorker(ABC):
@@ -98,7 +87,6 @@ class CommandWorker(ABC):
                     value = next((kwargs[_] for _ in [key] + [__ for __ in keys] if kwargs.get(_)), None)
                 if value:
                     credentials[key] = value
-
 
         return credentials
 
@@ -175,7 +163,7 @@ def _parse_identifier(identifier=None, **kwargs):
 
 
 def send_result(success, raw_samples, url=None, error=None, **kwargs):
-    _logger.debug('starting message sending')
+    log.debug('starting message sending')
     identifier = _parse_identifier(**kwargs)
 
     if not url:
@@ -189,7 +177,7 @@ def send_result(success, raw_samples, url=None, error=None, **kwargs):
         kwargs.update(url_params)
 
     url = f"{url.rstrip('/')}/{identifier}/"
-    _logger.debug(f'sending result for identifier {identifier} to {url}')
+    log.debug(f'sending result for identifier {identifier} to {url}')
 
     result = {
         'success': success,
@@ -209,15 +197,11 @@ def _start_scheduler(**kwargs):
     from apscheduler.executors.pool import ThreadPoolExecutor
     import pytz
 
-    _logger.debug('initializing scheduler and jobs')
+    log.debug('initializing scheduler and jobs')
     global _scheduler
     _scheduler = BackgroundScheduler(executors={'default': ThreadPoolExecutor(30)},
                                      job_defaults={'max_instances': 1},
                                      timezone=pytz.utc)
-    # _scheduler.add_job(func=CurJobManager.check_cur_job,
-    #                    trigger=IntervalTrigger(seconds=5),
-    #                    max_instances=1,
-    #                    next_run_time=datetime.datetime.utcnow() + datetime.timedelta(seconds=5))
 
     _scheduler.add_job(func=_work,
                        trigger=IntervalTrigger(minutes=1),
@@ -226,39 +210,39 @@ def _start_scheduler(**kwargs):
                        next_run_time=datetime.datetime.utcnow() + datetime.timedelta(seconds=1))
 
     _scheduler.start()
-    _logger.debug('scheduler and jobs initialized')
+    log.debug('scheduler and jobs initialized')
 
 def _work(**kwargs):
-    _logger.debug('starting new iteration')
+    log.debug('starting new iteration')
     # CurJobManager.signal_start()
     success, error, raw_samples = True, None, []
     try:
         con_params = {k: v for k, v in kwargs.items() if not k.startswith('url') and k not in ('identifier')}
     except Exception as ex:
         error = f'failed to parse connection params: {str(ex)}'
-        _logger.exception(error)
+        log.exception(error)
         success = False
 
     if success:
-        _logger.debug(f"starting to query device {kwargs['host']}")
+        log.debug(f"starting to query device {kwargs['host']}")
         try:
             worker = CiscoCommandWorker(**con_params)
             raw_samples = worker.work(**con_params)
-            _logger.debug(f"finished querying device {kwargs['host']}")
+            log.debug(f"finished querying device {kwargs['host']}")
         except Exception as ex:
             error = f"failed to read router {con_params.get('host')}: {str(ex)}"
-            _logger.exception(error)
+            log.exception(error)
             success = False
 
     try:
-        _logger.debug('formatting results')
+        log.debug('formatting results')
         if not isinstance(raw_samples, str):
             if isinstance(raw_samples, Iterable):
                 raw_samples = '\n'.join(raw_samples if isinstance(raw_samples, list) else [_ for _ in raw_samples])
-        _logger.debug('results formatted')
+        log.debug('results formatted')
     except Exception as ex:
         error = f'failed to format results: {str(ex)}'
-        _logger.exception(error)
+        log.exception(error)
         success = False
         raw_samples = 'INVALID'
 
@@ -271,11 +255,12 @@ def _work(**kwargs):
         error = f'failed to send results back: {str(ex)}'
         success = False
 
-    _logger.debug(f'finished iteration. success: {success}. error: {error}. len(samples): {len(raw_samples)}')
+    log.debug(f'finished iteration. success: {success}. error: {error}. len(samples): {len(raw_samples)}')
 
 
 def _parse_config(config, **kwargs):
     if not os.path.isfile(config):
+        log.error()
         raise ValueError(f'missing config file: {config}')
 
     import json
@@ -283,23 +268,11 @@ def _parse_config(config, **kwargs):
         return json.load(f)
 
 
-def _init_logger(logfile=None, verbose=False, **kwargs):
-    global _logger
-    _logger = logging.getLogger(__name__)
-    _logger.setLevel(logging.DEBUG if verbose else logging.WARNING)
-
-    handler = logging.FileHandler(logfile) if logfile else logging.StreamHandler(sys.stdout)
-    formatter = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    handler.setFormatter(formatter)
-
-    _logger.addHandler(handler)
-
-
 if __name__ == '__main__':
     import argparse
     import time
 
-    parser = argparse.ArgumentParser(description='Cisco Router flows statistics fetcher - Secunity DDoS Inhibitor')
+    parser = argparse.ArgumentParser(description='Secunity DDoS Inhibitor On-Prem Agent')
     parser.add_argument('-c', '--config', type=str, help='Config file (overriding all other options)', default=_DEFAULTS['config'])
     parser.add_argument('-l', '--logfile', type=str, help='File to log to. default: ', default=None)
     parser.add_argument('-v', '--verbose', type=bool, help='Indicates whether to log verbose data', default=False)
@@ -319,14 +292,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args = vars(args)
 
-    # args['config'] = os.path.join(os.getcwd(), 'sample.conf')
-
     config = args['config']
     if config:
         config = _parse_config(config)
         args.update(config)
-
-    _init_logger(**args)
 
     _start_scheduler(**args)
 
@@ -334,7 +303,7 @@ if __name__ == '__main__':
         while True:
             time.sleep(1)
     except Exception as ex:
-        _logger.warning(f'Stop signal recieved, shutting down scheduler: {str(ex)}')
+        log.warning(f'Stop signal recieved, shutting down scheduler: {str(ex)}')
         _scheduler.shutdown()
-        _logger.warning('scheduler stopped')
-        _logger.warning('quiting')
+        log.warning('scheduler stopped')
+        log.warning('quiting')
