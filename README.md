@@ -77,4 +77,35 @@ optional arguments:
 TODO:
 
 ### Building and Running a Docker Container
-This is the recommended method at the moment, the pre-built docker image as it allows fu
+This is the recommended method at the moment as it does not require keeping the config file on the host machine.
+
+1. Download the Dockerfile from which to build the local image (see [Dockerfile](Dockerfile))
+```bash
+$ curl -L https://github.com/secunity/routers-stats-fetcher/raw/master/Dockerfile -o Dockerfile
+```
+2. Build the local image (replace *IMAGE_NAME*)
+```
+$ docker build --rm -t IMAGE_NAME .
+```
+3. Download the config file
+```bash
+$ curl -L https://github.com/secunity/routers-stats-fetcher/raw/master/routers-stats-fetcher.conf -o routers-stats-fetcher.conf
+```
+4. Edit the config file with your favorite editor
+```bash
+$ vi routers-stats-fetcher.conf
+```
+5. Create a new container from the local image (replace *CONTAINER_NAME*)
+```bash
+$ docker create -it \
+--name CONTAINER_NAME \
+IMAGE_NAME
+```
+6. Copy the edited config file inside the docker container
+```bash
+$ docker cp routers-stats-fetcher.conf CONTAINER_NAME:/opt/routers-stats-fetcher/routers-stats-fetcher.conf
+```
+7. Start the container
+```bash
+$ docker start
+```
