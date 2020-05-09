@@ -69,12 +69,9 @@ optional arguments:
 
 ## Running the agent
 
-**[Running a Pre-Built Docker Image](#Running-a-Pre-Built-Docker-Image)**<br>
 **[Building and Running a Docker Container](#Building-and-Running-a-Docker-Container)**<br>
+**[Running a Pre-Built Docker Image](#Running-a-Pre-Built-Docker-Image)**<br>
 **[Python Script with Virtual Environment](#Python-Script-with-Virtual-Environment)**
-
-### Running a Pre-Built Docker Image
-TODO:
 
 ### Building and Running a Docker Container
 This is the recommended method at the moment as it does not require keeping the config file on the host machine.
@@ -115,6 +112,9 @@ $ docker cp routers-stats-fetcher.conf CONTAINER_NAME:/opt/routers-stats-fetcher
 7. Start the container
 ```shell script
 $ docker start CONTAINER_NAME
+
+### Running a Pre-Built Docker Image
+TODO:
 ```
 
 ### Python Script with Virtual Environment
