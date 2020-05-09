@@ -2,9 +2,9 @@
 Secunity's DDoS Inhibitor on-prem agent for network devices (mainly routers).
 
 The on-prem agent requires a python (at least 3.6) script to run continuously on a linux machine. The script has a few dependencies (see [requirements.txt](requirements.txt)) with several dependencies:
-- paramiko - used to connect to the device
-- APScheduler - used to schedule a period network device check
-- requests - used to send data back to Secunity's DDoS Inhibitor
+- [paramiko](http://www.paramiko.org/) - used to connect to the device
+- [APScheduler](https://apscheduler.readthedocs.io/) - used to schedule a period network device check
+- [requests](https://requests.readthedocs.io/) - used to send data back to Secunity's DDoS Inhibitor
 
 The python script can be initialized with a config file (JSON - see [routers-stats-fetcher.conf](routers-stats-fetcher.conf)) or by passing command line parameters
 
@@ -71,7 +71,7 @@ optional arguments:
 
 **[Running a Pre-Built Docker Image](#Running-a-Pre-Built-Docker-Image)**<br>
 **[Building and Running a Docker Container](#Building-and-Running-a-Docker-Container)**<br>
-**[Run on a host using a python virtual environment](#virtualenv)**
+**[Python Script with Virtual Environment](#Python-Script-with-Virtual-Environment)**
 
 ### Running a Pre-Built Docker Image
 TODO:
@@ -99,6 +99,7 @@ $ vi routers-stats-fetcher.conf
 ```bash
 $ docker create -it \
 --name CONTAINER_NAME \
+--restart unless-stopped \
 IMAGE_NAME
 ```
 6. Copy the edited config file inside the docker container
@@ -107,5 +108,33 @@ $ docker cp routers-stats-fetcher.conf CONTAINER_NAME:/opt/routers-stats-fetcher
 ```
 7. Start the container
 ```bash
-$ docker start
+$ docker start CONTAINER_NAME
 ```
+
+### Python Script with Virtual Environment
+While it may look easier to setup you must make sure the script must be continuously running - 
+it is utilizing an internal scheduler for that purpose.
+Using a process control system (such as [supervisord](http://supervisord.org/)) is highly recommended.
+
+1. Create the python virtual environment
+ ```bash
+$ python3 -m virtualenv venv
+```
+
+2. Active virtual environment
+```bash
+$ source venv/bin/activate
+```
+
+3. Install the requirements
+```bash
+$ pip install -r https://github.com/secunity/routers-stats-fetcher/raw/master/requirements.txt
+``` 
+
+4. Download and edit the config file
+
+
+5. Run the script 
+```bash
+$ python worker.py -c routers-stats-fetcher.conf
+``` 
