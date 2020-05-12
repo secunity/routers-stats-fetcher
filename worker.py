@@ -23,7 +23,7 @@ SSH_DEFAULTS = {
 
 _SEND_RESULT_DEFAULTS = {
     'url_host': 'api.secunity.io',
-    'url_scheme': 'https',
+    'url_scheme': 'http',
     'url_path': 'fstats1/v1.0.0/in',
     'url_method': 'POST'
 }
