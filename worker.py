@@ -309,8 +309,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args = vars(args)
 
-    args['config'] = os.path.join(os.getcwd(), 'secret.conf')
-
     config = args['config']
     if config:
         config = _parse_config(config)
