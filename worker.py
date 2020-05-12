@@ -32,20 +32,34 @@ _DEFAULTS = {
     'config': '/opt/routers-stats-fetcher/routers-stats-fetcher.conf',
 }
 
-_cnf = {}
+_cnf = {'__log_init__': False}
 
 _scheduler = None
 
 
-def _init_logger(logfile=None, verbose=False, **kwargs):
+def _init_logger(logfile=None, verbose=False, to_stdout=False, to_stderr=False, **kwargs):
     logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG if verbose else logging.WARNING)
+    if _cnf['__log_init__']:
+        return logger
 
-    handler = logging.FileHandler(logfile) if logfile else logging.StreamHandler(sys.stdout)
-    formatter = '"%(asctime)s-%(levelname)s-%(module)s-line %(lineno)s-%(process)d-%(funcName)s-%(message)s"'
-    handler.setFormatter(formatter)
+    log_level = logging.DEBUG if verbose else logging.WARNING
+    logger.setLevel(log_level)
 
-    logger.addHandler(handler)
+    handlers = []
+    if to_stdout:
+        handlers.append(logging.StreamHandler(sys.stdout))
+    if to_stderr:
+        handlers.append(logging.StreamHandler(sys.stderr))
+    if logfile:
+        handlers.append(logging.FileHandler(logfile))
+
+    for handler in handlers:
+        handler.setLevel(log_level)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(funcName)s - %(lineno)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+    _cnf['__log_init__'] = True
     return logger
 
 class logMeta(type):
@@ -294,6 +308,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     args = vars(args)
+
+    args['config'] = os.path.join(os.getcwd(), 'secret.conf')
 
     config = args['config']
     if config:
