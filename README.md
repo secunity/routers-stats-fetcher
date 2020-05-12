@@ -68,10 +68,10 @@ optional arguments:
 
 
 ## Running the agent
-
-**[Building and Running a Docker Container](#Building-and-Running-a-Docker-Container)**<br>
-**[Running a Pre-Built Docker Image](#Running-a-Pre-Built-Docker-Image)**<br>
-**[Python Script with Virtual Environment](#Python-Script-with-Virtual-Environment)**
+**There are 3 options to run the agent:**
+* **[Building and Running a Docker Container](#Building-and-Running-a-Docker-Container)**<br>
+* **[Running a Pre-Built Docker Image](#Running-a-Pre-Built-Docker-Image)**<br>
+* **[Python Script with Virtual Environment](#Python-Script-with-Virtual-Environment)**
 
 ### Building and Running a Docker Container
 This is the recommended method at the moment as it does not require keeping the config file on the host machine.
