@@ -59,7 +59,8 @@ def _init_logger(logfile=None, verbose=False, to_stdout=False, to_stderr=False, 
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
-    _cnf['__log_init__'] = True
+    if handlers:
+        _cnf['__log_init__'] = True
     return logger
 
 class logMeta(type):
@@ -276,7 +277,7 @@ def _work(**kwargs):
 
 def _parse_config(config, **kwargs):
     if not os.path.isfile(config):
-        log.error()
+        log.error(f'missing config file: {config}')
         raise ValueError(f'missing config file: {config}')
 
     import json
@@ -290,15 +291,23 @@ if __name__ == '__main__':
     import copy
 
     parser = argparse.ArgumentParser(description='Secunity DDoS Inhibitor On-Prem Agent')
+
     parser.add_argument('-c', '--config', type=str, help='Config file (overriding all other options)', default=_DEFAULTS['config'])
+
     parser.add_argument('-l', '--logfile', type=str, help='File to log to. default: ', default=None)
     parser.add_argument('-v', '--verbose', type=bool, help='Indicates whether to log verbose data', default=False)
+
+    parser.add_argument('--to_stdout', '--stdout', type=str, help='Log messages to stdout', default=False)
+    parser.add_argument('--to_stderr', '--stderr', type=str, help='')
+
+    parser.add_argument('--identifier', '--id', type=str, help='Device ID', default=None)
+
     parser.add_argument('-s', '--host', '--ip', type=str, help='Router IP', default=None)
     parser.add_argument('-p', '--port', type=int, help='SSH port', default=None)
     parser.add_argument('-u', '--user', '--username', type=str, help='SSH user', default=None)
     parser.add_argument('-w', '--password', type=str, help='SSH password', default=None)
     parser.add_argument('-k', '--key_filename', type=str, help='SSH Key Filename', default=None)
-    parser.add_argument('--identifier', '--id', type=str, help='Device ID', default=None)
+
     parser.add_argument('--url', type=str, help='The URL to use for remove server', default=None)
     parser.add_argument('--url_scheme', type=str, help='Remote server URL scheme', default=None)
     parser.add_argument('--url_host', type=str, help='Remote server URL hostname', default=None)
