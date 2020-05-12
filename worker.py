@@ -32,6 +32,8 @@ _DEFAULTS = {
     'config': '/opt/routers-stats-fetcher/routers-stats-fetcher.conf',
 }
 
+_cnf = {}
+
 _scheduler = None
 
 
@@ -61,7 +63,7 @@ class log(metaclass=logMeta):
     @classmethod
     def _log(cls):
         if not cls._logger:
-            cls._logger = _init_logger()
+            cls._logger = _init_logger(**_cnf)
         return cls._logger
 
 
@@ -271,6 +273,7 @@ def _parse_config(config, **kwargs):
 if __name__ == '__main__':
     import argparse
     import time
+    import copy
 
     parser = argparse.ArgumentParser(description='Secunity DDoS Inhibitor On-Prem Agent')
     parser.add_argument('-c', '--config', type=str, help='Config file (overriding all other options)', default=_DEFAULTS['config'])
@@ -296,6 +299,8 @@ if __name__ == '__main__':
     if config:
         config = _parse_config(config)
         args.update(config)
+
+    _cnf.update({k: v for k, v in copy.deepcopy(args).items()})
 
     _start_scheduler(**args)
 
