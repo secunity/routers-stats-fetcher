@@ -112,9 +112,6 @@ $ docker cp routers-stats-fetcher.conf CONTAINER_NAME:/opt/routers-stats-fetcher
 7. Start the container
 ```shell script
 $ docker start CONTAINER_NAME
-
-### Running a Pre-Built Docker Image
-TODO:
 ```
 
 ### Python Script with Virtual Environment
@@ -157,3 +154,6 @@ $ chmod 777 worker.py
 ```shell script
 $ python worker.py
 ``` 
+
+### Running a Pre-Built Docker Image
+Will be added soon
