@@ -42,7 +42,7 @@ def _init_logger(logfile=None, verbose=False, **kwargs):
     logger.setLevel(logging.DEBUG if verbose else logging.WARNING)
 
     handler = logging.FileHandler(logfile) if logfile else logging.StreamHandler(sys.stdout)
-    formatter = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    formatter = '"%(asctime)s-%(levelname)s-%(module)s-line %(lineno)s-%(process)d-%(funcName)s-%(message)s"'
     handler.setFormatter(formatter)
 
     logger.addHandler(handler)
