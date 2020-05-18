@@ -193,7 +193,7 @@ def send_result(success, raw_samples, url=None, error=None, **kwargs):
         url = '{url_scheme}://{url_host}/{url_path}'.format(**url_params)
         kwargs.update(url_params)
 
-    url = f"{url.rstrip('/')}/{identifier}/"
+    url = f"{url.rstrip('/ ')}/{identifier}/"
     log.debug(f'sending result for identifier {identifier} to {url}')
 
     result = {
