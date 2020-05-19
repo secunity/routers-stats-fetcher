@@ -96,11 +96,13 @@ $ curl -L https://github.com/secunity/routers-stats-fetcher/raw/master/routers-s
 $ vi routers-stats-fetcher.conf
 ```
 
-5. Create a new container from the local image (replace *CONTAINER_NAME*)
+5. Create a new container from the local image (replace *CONTAINER_NAME*).
+
 ```shell script
 $ docker create -it \
 --name CONTAINER_NAME \
 --restart unless-stopped \
+--network host \
 IMAGE_NAME
 ```
 
