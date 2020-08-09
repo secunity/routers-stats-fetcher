@@ -1,5 +1,5 @@
 # routers-stats-fetcher
-Secunity's DDoS Inhibitor on-prem agent for network devices (mainly routers).
+Secunity's on-prem agent for network devices (mainly routers).
 
 The on-prem agent requires a python (at least 3.6) script to run continuously on a linux machine. The script has a few dependencies (see [requirements.txt](requirements.txt)) with several dependencies:
 - [paramiko](http://www.paramiko.org/) - used to connect to the device
@@ -11,14 +11,17 @@ The python script can be initialized with a config file (JSON - see [routers-sta
 ### Script/Config Arguments
 ```shell script
 $ ./worker.py -h
-usage: worker.py [-h] [-c CONFIG] [-l LOGFILE] [-v VERBOSE] [-s HOST]
-                 [-p PORT] [-u USER] [-w PASSWORD] [-k KEY_FILENAME]
-                 [--identifier IDENTIFIER] [--url URL]
+usage: worker.py [-h] [-c CONFIG] [-l LOGFILE] [-v VERBOSE]
+                 [--to_stdout TO_STDOUT] [--to_stderr TO_STDERR]
+                 [--identifier IDENTIFIER] [-s HOST] [-n VENDOR] [-p PORT]
+                 [-u USER] [-w PASSWORD] [-k KEY_FILENAME]
+                 [--command_prefix COMMAND_PREFIX] [--url URL]
                  [--url_scheme URL_SCHEME] [--url_host URL_HOST]
                  [--url_port URL_PORT] [--url_path URL_PATH]
                  [--url_method URL_METHOD]
 
-Secunity DDoS Inhibitor On-Prem Agent
+
+Secunity On-Prem Agent
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -31,6 +34,7 @@ optional arguments:
   -s HOST, --host HOST, --ip HOST
                         Router IP
   -p PORT, --port PORT  SSH port
+  -n VENDOR, --vendor VENDOR  The netwrk device vendor (default "cisco")
   -u USER, --user USER, --username USER
                         SSH user
   -w PASSWORD, --password PASSWORD
@@ -57,6 +61,7 @@ optional arguments:
 | verbose | | Indicates whether to perform verbose logging | false |
 | host | V | Network device hostname/ip | |
 | port | | Port to use for SSH session | 22 |
+| vendor | | The network device vendor | cisco |
 | user | V | Username to use for SSH session | |
 | password | | Password to use for SSH session | |
 | key_filename | | Key file (full path) to use for SSH session | |

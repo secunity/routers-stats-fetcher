@@ -173,6 +173,20 @@ class CiscoCommandWorker(CommandWorker):
         return result
 
 
+class JuniperCommandWorker(CommandWorker):
+
+    def get_stats_from_router(self, credentials, **kwargs):
+        command = 'show firewall filter detail __flowspec_default_inet__'
+        command_prefix = _cnf.get('command_prefix')
+        if command_prefix:
+            if isinstance(command_prefix, str):
+                command = f'{command_prefix} {command}'
+            elif isinstance(command_prefix, bool) or command_prefix == 1:
+                command = f'cli {command}'
+        result = self.perform_cli_command(credentials=credentials, command=command, **kwargs)
+        return result
+
+
 def _parse_identifier(identifier=None, **kwargs):
     if not identifier:
         identifier = kwargs.get('device_identifier') or kwargs.get('device') or kwargs.get('key')
@@ -242,14 +256,23 @@ def _work(**kwargs):
 
     if success:
         log.debug(f"starting to query device {kwargs['host']}")
-        try:
-            worker = CiscoCommandWorker(**con_params)
-            raw_samples = worker.work(**con_params)
-            log.debug(f"finished querying device {kwargs['host']}")
-        except Exception as ex:
-            error = f"failed to read router {con_params.get('host')}: {str(ex)}"
-            log.exception(error)
+        vendor = str(_cnf.get('vendor') or '').strip().lower()
+        if not vendor or vendor == 'cisco':
+            vendor_cls = CiscoCommandWorker
+        elif vendor == 'juniper':
+            vendor_cls = JuniperCommandWorker
+        else:
+            log.exception(f'invalid or unsupported network device vendor: "{vendor}"')
             success = False
+        if success:
+            try:
+                worker = vendor_cls(**con_params)
+                raw_samples = worker.work(**con_params)
+                log.debug(f"finished querying device {kwargs['host']}")
+            except Exception as ex:
+                error = f"failed to read router {con_params.get('host')}: {str(ex)}"
+                log.exception(error)
+                success = False
 
     try:
         log.debug('formatting results')
@@ -303,10 +326,14 @@ if __name__ == '__main__':
     parser.add_argument('--identifier', '--id', type=str, help='Device ID', default=None)
 
     parser.add_argument('-s', '--host', '--ip', type=str, help='Router IP', default=None)
-    parser.add_argument('-p', '--port', type=int, help='SSH port', default=None)
-    parser.add_argument('-u', '--user', '--username', type=str, help='SSH user', default=None)
-    parser.add_argument('-w', '--password', type=str, help='SSH password', default=None)
-    parser.add_argument('-k', '--key_filename', type=str, help='SSH Key Filename', default=None)
+    parser.add_argument('-p', '--port', type=int, default=None, help='SSH port')
+    parser.add_argument('-n', '--vendor', type=str, default='cisco', help='The Vendor of the Router')
+    parser.add_argument('-u', '--user', '--username', type=str, default=None, help='SSH user')
+    parser.add_argument('-w', '--password', type=str, default=None, help='SSH password')
+    parser.add_argument('-k', '--key_filename', type=str, default=None, help='SSH Key Filename')
+
+    parser.add_argument('--command_prefix', type=str, default=None,
+                        help='The prefix to use when sending commands to the Router using SSH (for instance "cli" in Juniper)')
 
     parser.add_argument('--url', type=str, help='The URL to use for remove server', default=None)
     parser.add_argument('--url_scheme', type=str, help='Remote server URL scheme', default=None)
@@ -314,6 +341,7 @@ if __name__ == '__main__':
     parser.add_argument('--url_port', type=int, help='Remote server URL port', default=0)
     parser.add_argument('--url_path', type=str, help='Remote server URL path', default=None)
     parser.add_argument('--url_method', type=str, help='Remote server URL method', default=None)
+
 
     args = parser.parse_args()
     args = vars(args)
