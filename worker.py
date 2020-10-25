@@ -187,6 +187,14 @@ class JuniperCommandWorker(CommandWorker):
         return result
 
 
+class AristaCommandWorker(CommandWorker):
+
+    def get_stats_from_router(self, credentials, **kwargs):
+        command = 'sh flow-spec ipv4'
+        result = self.perform_cli_command(credentials=credentials, command=command, **kwargs)
+        return result
+
+
 def _parse_identifier(identifier=None, **kwargs):
     if not identifier:
         identifier = kwargs.get('device_identifier') or kwargs.get('device') or kwargs.get('key')
@@ -261,6 +269,8 @@ def _work(**kwargs):
             vendor_cls = CiscoCommandWorker
         elif vendor == 'juniper':
             vendor_cls = JuniperCommandWorker
+        elif vendor == 'arista':
+            vendor_cls = AristaCommandWorker
         else:
             log.exception(f'invalid or unsupported network device vendor: "{vendor}"')
             success = False
@@ -313,11 +323,11 @@ if __name__ == '__main__':
     import time
     import copy
 
-    parser = argparse.ArgumentParser(description='Secunity DDoS Inhibitor On-Prem Agent')
+    parser = argparse.ArgumentParser(description='Secunity On-Prem Agent')
 
     parser.add_argument('-c', '--config', type=str, help='Config file (overriding all other options)', default=_DEFAULTS['config'])
 
-    parser.add_argument('-l', '--logfile', type=str, help='File to log to. default: ', default=None)
+    parser.add_argument('-l', '--logfile', type=str, help='File to log to', default=None)
     parser.add_argument('-v', '--verbose', type=bool, help='Indicates whether to log verbose data', default=False)
 
     parser.add_argument('--to_stdout', '--stdout', type=str, help='Log messages to stdout', default=False)
