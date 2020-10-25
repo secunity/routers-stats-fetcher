@@ -168,7 +168,8 @@ class CommandWorker(ABC):
 class CiscoCommandWorker(CommandWorker):
 
     def get_stats_from_router(self, credentials, **kwargs):
-        command = 'sh flowspec ipv4 detail'
+        # command = 'sh flowspec ipv4 detail'
+        command = 'show flowspec vrf all ipv4 detail'
         result = self.perform_cli_command(credentials=credentials, command=command, **kwargs)
         return result
 
