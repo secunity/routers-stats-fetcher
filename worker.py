@@ -226,7 +226,8 @@ def send_result(success, raw_samples, url=None, error=None, **kwargs):
         'time': datetime.datetime.utcnow().isoformat()
     }
 
-    func = getattr(requests, kwargs['url_method'].lower())
+    method = kwargs.get('url_method') or _SEND_RESULT_DEFAULTS['url_method']
+    func = getattr(requests, method.lower())
     response = func(url=url, json=result)
     return 200 <= response.status_code <= 210, error
 
