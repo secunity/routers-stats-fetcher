@@ -119,20 +119,28 @@ class CommandWorker(ABC):
             'hostname': params['host'],
             'port': params['port'],
             'username': params['user'],
+            'allow_agent': False,
+            'look_for_keys': params['look_for_keys'] if params.get('look_for_keys') in (True, False) else False
         }
+
         if params.get('password'):
             result['password'] = params['password']
         else:
             result['key_filename'] = params['key_filename']
         if params.get('timeout'):
             result['timeout'] = params['timeout']
+
         return result
 
-    def _generate_connection(self, params, look_for_keys=False, **kwargs):
+    def _generate_connection(self, params, **kwargs):
+        look_for_keys = [_.pop('look_for_keys', None) for _ in (kwargs, params)]
+        offset = next((i + 1 for i, _ in enumerate(look_for_keys) if _ in (True, False)), None)
+        params['look_for_keys'] = look_for_keys[offset - 1] if isinstance(offset, int) else False
+
         connection = paramiko.SSHClient()
         connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         params = self._ssh_to_paramiko_params(params)
-        connection.connect(look_for_keys=look_for_keys, **params)
+        connection.connect(**params)
         return connection
 
     def perform_cli_command(self, credentials, command=None, exec_command=None, **kwargs):
