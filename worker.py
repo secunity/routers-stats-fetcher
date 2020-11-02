@@ -119,7 +119,7 @@ class CommandWorker(ABC):
             'hostname': params['host'],
             'port': params['port'],
             'username': params['user'],
-            'allow_agent': False,
+            'allow_agent': True,
             'look_for_keys': params['look_for_keys'] if params.get('look_for_keys') in (True, False) else False
         }
 
