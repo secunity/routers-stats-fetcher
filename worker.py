@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-All rights reserved to Secunity 2020
+All rights reserved to Secunity 2021
 '''
 import datetime
 import os
@@ -9,9 +9,12 @@ import sys
 from abc import ABC, abstractmethod
 import logging
 from collections import Iterable
+import ipaddress
 
 import paramiko
 import requests
+try: import jstyleson as json
+except: import json
 
 
 SSH_DEFAULTS = {
@@ -30,6 +33,7 @@ _SEND_RESULT_DEFAULTS = {
 
 _DEFAULTS = {
     'config': '/opt/routers-stats-fetcher/routers-stats-fetcher.conf',
+    'datetime_format': '%Y-%m-%d %H:%M:%S',
 }
 
 _cnf = {'__log_init__': False}
@@ -150,6 +154,8 @@ class CommandWorker(ABC):
         connection = self._generate_connection(credentials, **kwargs)
         try:
             if not exec_command:
+                if not command.endswith('\n'):
+                    command = f'{command}\n'
                 def _exec_command(_connection, _command, **_kwargs):
                     stdin, stdout, stderr = _connection.exec_command(_command)
 
@@ -263,19 +269,22 @@ def _start_scheduler(**kwargs):
 
 def _work(**kwargs):
     log.debug('starting new iteration')
-    # CurJobManager.signal_start()
     success, error, raw_samples = True, None, []
     try:
-        con_params = {k: v for k, v in kwargs.items() if not k.startswith('url') and k not in ('identifier')}
+        con_params = {
+            k: v for k, v in kwargs.items()
+            if not k.startswith('url') and k not in ('identifier',)
+        }
     except Exception as ex:
         error = f'failed to parse connection params: {str(ex)}'
         log.exception(error)
         success = False
 
     if success:
-        log.debug(f"starting to query device {kwargs['host']}")
-        vendor = str(_cnf.get('vendor') or '').strip().lower()
-        if not vendor or vendor == 'cisco':
+        vendor = kwargs['vendor'].strip().lower()
+        host = kwargs['host']
+        log.debug(f'starting to query device "{host}", vendor: "{vendor}"')
+        if vendor == 'cisco':
             vendor_cls = CiscoCommandWorker
         elif vendor == 'juniper':
             vendor_cls = JuniperCommandWorker
@@ -288,7 +297,19 @@ def _work(**kwargs):
             try:
                 worker = vendor_cls(**con_params)
                 raw_samples = worker.work(**con_params)
-                log.debug(f"finished querying device {kwargs['host']}")
+                log.debug(f'finished querying device {host}. response length: {len(raw_samples)}')
+                dump = kwargs.get('dump')
+                if dump:
+                    log.debug(f'writing dump results to "{dump}"')
+                    try:
+                        lines = [_ for _ in raw_samples if _.strip()]
+                        lines.insert(0, f"Time: {datetime.datetime.utcnow().strftime(_DEFAULTS['datetime_format'])} (local: {datetime.datetime.now().strftime(_DEFAULTS['datetime_format'])})")
+                        lines.append('')
+                        lines = '\n'.join(lines)
+                        with open(dump, 'a') as f:
+                            f.write(lines)
+                    except Exception as ex:
+                        log.exception(f'failed to write results to dump file "{dump}": "{str(ex)}"')
             except Exception as ex:
                 error = f"failed to read router {con_params.get('host')}: {str(ex)}"
                 log.exception(error)
@@ -320,12 +341,107 @@ def _work(**kwargs):
 
 def _parse_config(config, **kwargs):
     if not os.path.isfile(config):
-        log.error(f'missing config file: {config}')
-        raise ValueError(f'missing config file: {config}')
+        error = f'missing config file: {config}'
+        log.error(error)
+        raise ValueError(error)
 
-    import json
-    with open(config, 'r') as f:
-        return json.load(f)
+    try:
+        with open(config, 'r') as f:
+            return json.load(f)
+    except Exception as ex:
+        log.exception(f'failed to parse config file: "{config}". error: "{str(ex)}"')
+        raise ex
+
+
+def _to_bool(x):
+    if x is None:
+        return None
+    if x == True or x.lower() == 'true':
+        return True
+    if x == False or x.lower() == 'false':
+        return False
+    log.error(f'invalid bool: "{x}"')
+
+
+def _parse_vendor(vendor):
+    if not vendor:
+        return 'cisco'
+    vendor = vendor.strip().lower()
+    if vendor in ('cisco', 'juniper', 'arista'):
+        return vendor
+
+    error = f'invalid vendor: "{vendor}"'
+    log.exception(error)
+    raise ValueError(error)
+
+def _parse_ip(ip, throw=False):
+    try:
+        ip = ipaddress.IPv4Address(ip)
+        return str(ip)
+    except Exception as ex:
+        if throw:
+            log.exception(f'failed to parse ip: "{ip}". error: {str(ex)}')
+            raise ex
+        return None
+
+_types = {
+    str: lambda x: x if isinstance(x, str) else str(x),
+    int: lambda x: x if isinstance(x, int) else int(x),
+    bool: _to_bool,
+    'vendor': _parse_vendor,
+    'ip': _parse_ip,
+}
+
+_conf_keys = {
+    'config': str,
+    'logfile': str,
+    'verbose': bool,
+    'dump': str,
+    'to_stderr': bool,
+    'to_stdout': bool,
+
+    'identifier': str,
+    'host': 'ip',
+    'port': int,
+    'vendor': 'vendor',
+    'username': str,
+    'password': str,
+    'command_prefix': str,
+
+    'url_scheme': str,
+    'url_host': 'ip',
+    'url_port': int,
+    'url_path': str,
+    'url_method': str,
+}
+
+def _parse_env_vars(args):
+    args.update({
+        _: os.environ.get(f'SECUNITY_{_.upper()}')
+        for _ in ('config',
+                  'logfile', 'verbose', 'dump', 'to_stderr', 'to_stdout',
+                  'identifier',
+                  'host', 'port', 'vendor', 'username', 'password', 'command_prefix',
+                  'url_scheme', 'url_host', 'url_port', 'url_path', 'url_method',)
+        if args.get(_) is None and os.environ.get(f'SECUNITY_{_.upper()}') is not None
+    })
+
+    return args
+
+
+def _set_args_types(args, rm_keys=False):
+    if rm_keys:
+        _rm_keys = []
+    for key, _type in _conf_keys.items():
+        value = args.get(key)
+        if value is not None:
+            args[key] = _types[_type](value)
+        elif rm_keys:
+            _rm_keys.append(key)
+    if rm_keys:
+        for key in _rm_keys:
+            args.pop(key, None)
+    return args
 
 
 if __name__ == '__main__':
@@ -339,6 +455,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-l', '--logfile', type=str, help='File to log to', default=None)
     parser.add_argument('-v', '--verbose', type=bool, help='Indicates whether to log verbose data', default=False)
+    parser.add_argument('-d', '--dump', type=str, help='File path to dump results')
 
     parser.add_argument('--to_stdout', '--stdout', type=str, help='Log messages to stdout', default=False)
     parser.add_argument('--to_stderr', '--stderr', type=str, help='')
@@ -365,11 +482,13 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     args = vars(args)
+    args = _parse_env_vars(args)
 
     config = args['config']
     if config:
         config = _parse_config(config)
         args.update(config)
+    args = _set_args_types(args)
 
     _cnf.update({k: v for k, v in copy.deepcopy(args).items()})
 
