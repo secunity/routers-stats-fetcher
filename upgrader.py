@@ -77,6 +77,13 @@ def _check_upgrade(**kwargs):
         log.exception(f'failed to issue command: {command}. error: {str(ex)}')
         return False
 
+    command = f'git checkout $SECUNITY_BRANCH'
+    try:
+        output = check_output(shlex.split(command), cwd=script_dir)
+    except Exception as ex:
+        log.exception(f'failed to issue command: {command}. error: {str(ex)}')
+        return False
+
     command = 'git pull'
     try:
         output = check_output(shlex.split(command), cwd=script_dir)
