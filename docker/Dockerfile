@@ -13,6 +13,8 @@ RUN         apt-get update && apt-get upgrade -y && apt-get autoremove -y &&\
             apt-get install -y git python3-pip &&\
             mkdir -p /etc/supervisor &&\
             git clone https://github.com/secunity/routers-stats-fetcher.git /opt/$SECUNITYAPP &&\
+            cd /opt/$SECUNITYAPP &&\
+            git checkout $SECUNITY_BRANCH &&\
             python3 -m pip install --upgrade pip setuptools &&\
             python3 -m pip install supervisor &&\
             python3 -m pip install -r /opt/$SECUNITYAPP/requirements.txt &&\
@@ -26,4 +28,3 @@ WORKDIR     /opt/$SECUNITYAPP
 
 ENTRYPOINT  ["/entrypoint.sh"]
 
-#  rm -rf /opt/routers-stats-fetcher

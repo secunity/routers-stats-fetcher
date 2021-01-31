@@ -42,37 +42,37 @@ The on-prem agent connects based on the config file (JSON - see [routers-stats-f
 Please follow the following steps:
 
 
-1. Download the latest docker image
+###### Download the latest docker image (optional)
 ```shell script
-$ docker pull secunity/secunity-routers-stats-fetcher
+$ docker pull secunity/cfstats1
 ```
 
-2. Download the config file
+###### Download the config file
 ```shell script
 $ curl -L https://github.com/secunity/routers-stats-fetcher/raw/master/routers-stats-fetcher.conf -o routers-stats-fetcher.conf
 ```
 
-3. Edit the config file with your favorite editor
+###### Edit the config file with your favorite editor
 ```shell script
 $ vi routers-stats-fetcher.conf
 ```
 
-4. Create a new container from the downloaded image.
+###### Create a new container from the downloaded image.
 
 ```shell script
 $ docker create -it \
 --name secunity-probe \
 --restart unless-stopped \
 --network host \
-secunity/secunity-routers-stats-fetcher
+secunity/cfstats1
 ```
 
-5. Copy the edited config file inside the docker container
+###### Copy the edited config file inside the docker container
 ```shell script
 $ docker cp routers-stats-fetcher.conf secunity-probe:/opt/routers-stats-fetcher
 ```
 
-7. Start the container
+###### Start the container
 ```shell script
 $ docker start secunity-probe
 ```

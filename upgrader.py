@@ -145,7 +145,8 @@ def _parse_config(config, **kwargs):
         log.error(f'missing config file: {config}')
         raise ValueError(f'missing config file: {config}')
 
-    import json
+    try: import jstyleson as json
+    except: import json
     with open(config, 'r') as f:
         return json.load(f)
 
