@@ -36,6 +36,9 @@ _DEFAULTS = {
     'datetime_format': '%Y-%m-%d %H:%M:%S',
 }
 
+
+__BOOL_TYPES__ = (True, False,)
+
 _cnf = {'__log_init__': False}
 
 _scheduler = None
@@ -356,11 +359,17 @@ def _parse_config(config, **kwargs):
 def _to_bool(x):
     if x is None:
         return None
-    if x == True or x.lower() == 'true':
+    elif x in __BOOL_TYPES__:
+        return x
+    elif not isinstance(x, str):
+        pass
+    elif x.lower() == 'true':
         return True
-    if x == False or x.lower() == 'false':
+    elif x.lower() == 'false':
         return False
-    log.error(f'invalid bool: "{x}"')
+    error = f'invalid bool: "{x}"'
+    log.error(error)
+    raise ValueError(error)
 
 
 def _parse_vendor(vendor):
