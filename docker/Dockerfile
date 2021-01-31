@@ -1,26 +1,29 @@
-FROM python:3.6
-# FROM python:3.6-alpine
+FROM        python:3.6
+MAINTAINER  Secunity LTD. (support@secunity.io)
 
-ADD entrypoint.sh /
+ENV         SECUNITYAPP="routers-stats-fetcher"
+ENV         PATH="/opt/$SECUNITYAPP:${PATH}"
+ENV         PYTHONPATH=/opt/$SECUNITYAPP
+ENV         SECUNITY_BRANCH="dump1"
 
-RUN apt-get update && apt-get upgrade -y && apt-get autoremove -y &&\
-    apt-get install -y git &&\
-    mkdir -p /etc/supervisor &&\
-    git clone https://github.com/secunity/routers-stats-fetcher.git /opt/routers-stats-fetcher &&\
-    python3 -m pip install --upgrade pip setuptools &&\
-    python3 -m pip install supervisor &&\
-    python3 -m pip install -r /opt/routers-stats-fetcher/requirements.txt &&\
-    chmod 777 /entrypoint.sh &&\
-    chmod 777 /opt/routers-stats-fetcher/worker.py &&\
-    chmod 777 /opt/routers-stats-fetcher/upgrader.py
+ADD         entrypoint.sh /
 
-ADD supervisord.conf /etc/supervisor
 
-ENV PATH="/opt/routers-stats-fetcher:${PATH}"
-ENV PYTHONPATH=/opt/routers-stats-fetcher
+RUN         apt-get update && apt-get upgrade -y && apt-get autoremove -y &&\
+            apt-get install -y git python3-pip &&\
+            mkdir -p /etc/supervisor &&\
+            git clone https://github.com/secunity/routers-stats-fetcher.git /opt/$SECUNITYAPP &&\
+            python3 -m pip install --upgrade pip setuptools &&\
+            python3 -m pip install supervisor &&\
+            python3 -m pip install -r /opt/$SECUNITYAPP/requirements.txt &&\
+            chmod 777 /entrypoint.sh &&\
+            chmod 777 /opt/$SECUNITYAPP/worker.py &&\
+            chmod 777 /opt/$SECUNITYAPP/upgrader.py
 
-WORKDIR /opt/routers-stats-fetcher
+ADD         supervisord.conf /etc/supervisor
 
-CMD ["/entrypoint.sh"]
+WORKDIR     /opt/$SECUNITYAPP
+
+ENTRYPOINT  ["/entrypoint.sh"]
 
 #  rm -rf /opt/routers-stats-fetcher
