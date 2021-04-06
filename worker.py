@@ -270,6 +270,20 @@ def _start_scheduler(**kwargs):
     _scheduler.start()
     log.debug('scheduler and jobs initialized')
 
+
+class ERROR:
+    CONERROR = 'conerror'
+    INVALID_CON_PARAMS = 'invalid-con-params'
+    UNSUPPORTED_VENBDOR = 'unsupported-vendor'
+    FORMATTING = 'formatting'
+
+    __ALL__ = (CONERROR, INVALID_CON_PARAMS, UNSUPPORTED_VENBDOR, FORMATTING)
+
+    @classmethod
+    def has(cls, value):
+        return value in cls.__ALL__
+
+
 def _work(**kwargs):
     log.debug('starting new iteration')
     success, error, raw_samples = True, None, []
@@ -282,6 +296,7 @@ def _work(**kwargs):
         error = f'failed to parse connection params: {str(ex)}'
         log.exception(error)
         success = False
+        raw_samples = ERROR.CONERROR
 
     if success:
         vendor = kwargs['vendor'].strip().lower()
@@ -296,6 +311,7 @@ def _work(**kwargs):
         else:
             log.exception(f'invalid or unsupported network device vendor: "{vendor}"')
             success = False
+            raw_samples = ERROR.UNSUPPORTED_VENBDOR
         if success:
             try:
                 worker = vendor_cls(**con_params)
@@ -317,29 +333,36 @@ def _work(**kwargs):
                 error = f"failed to read router {con_params.get('host')}: {str(ex)}"
                 log.exception(error)
                 success = False
+                raw_samples = ERROR.CONERROR
 
-    try:
-        log.debug('formatting results')
-        if not isinstance(raw_samples, str):
-            if isinstance(raw_samples, Iterable):
-                raw_samples = '\n'.join(raw_samples if isinstance(raw_samples, list) else [_ for _ in raw_samples])
-        log.debug('results formatted')
-    except Exception as ex:
-        error = f'failed to format results: {str(ex)}'
-        log.exception(error)
-        success = False
-        raw_samples = 'INVALID'
+    if success:
+        try:
+            log.debug('formatting results')
+            if not isinstance(raw_samples, str):
+                if isinstance(raw_samples, Iterable):
+                    raw_samples = '\n'.join(raw_samples if isinstance(raw_samples, list) else [_ for _ in raw_samples])
+            log.debug('results formatted')
+        except Exception as ex:
+            error = f'failed to format results: {str(ex)}'
+            log.exception(error)
+            success = False
+            raw_samples = ERROR.FORMATTING
 
+    if not success:
+        error = raw_samples
+        raw_samples = []
+    else:
+        error = None
     try:
         send_params = {k: v for k, v in kwargs.items() if k not in con_params}
-        sent, msg = send_result(success=success, raw_samples=raw_samples, **send_params)
+        sent, msg = send_result(success=success, raw_samples=raw_samples, error=error, **send_params)
         if not sent:
             success, error = False, msg or f'failed to send message'
     except Exception as ex:
         error = f'failed to send results back: {str(ex)}'
         success = False
 
-    log.debug(f'finished iteration. success: {success}. error: {error}. len(samples): {len(raw_samples)}')
+    log.debug(f'finished iteration. success: {success}. error: "{error}". len(samples string): {len(raw_samples)}')
 
 
 def _parse_config(config, **kwargs):
