@@ -46,10 +46,12 @@ def _work(**kwargs):
     if success:
         success, raw_samples, vendor_cls, vendor = get_vendor_class(**kwargs)
 
+    base_url = 'http://172.20.0.201:5000'
     try:
+
         send_params = {k: v for k, v in kwargs.items() if k not in con_params}
         identifier = kwargs.get('identifier')
-        res = requests.get(f'http://172.20.0.103:5000/in/flows/set/{identifier}')
+        res = requests.get(f'{base_url}/in/flows/set/{identifier}')
         outgoing_flows = res.json()
         outgoing_flows_to_add, outgoing_flows_to_remove = outgoing_flows.get('outgoing_flows_to_add'), outgoing_flows.get('outgoing_flows_to_remove')
         pass
@@ -64,9 +66,10 @@ def _work(**kwargs):
                     worker.add_flow(flow_to_add=_)
                 except Exception as ex:
                     print(ex)
+
             data = [_.get('comment') for _ in outgoing_flows_to_add]
             try:
-                res = requests.post(url=f'http://172.20.0.103:5000/in/flows/update_set/{identifier}', json={'data': data})
+                res = requests.post(url=f'{base_url}/in/flows/update_set/{identifier}', json={'data': data})
             except Exception as ex:
                 print(ex)
 
@@ -74,11 +77,14 @@ def _work(**kwargs):
             raw_samples = worker.work(**con_params)
             for _ in outgoing_flows_to_remove:
                 _id = next((flow.get('id') for flow in raw_samples if flow.get('comment') == _), None)
-                worker.remove_flow_with_id(_id=_id)
-
-            data = [_.get('comment') for _ in outgoing_flows_to_add]
+                try:
+                    worker.remove_flow_with_id(_id=_id)
+                except Exception as ex:
+                    pass
+            # data = [_.get('comment') for _ in outgoing_flows_to_add]
+            data = outgoing_flows_to_remove
             try:
-                res = requests.post(url=f'http://172.20.0.103:5000/in/flows/update_remove/{identifier}', json={'data': data})
+                res = requests.post(url=f'{base_url}/in/flows/update_remove/{identifier}', json={'data': data})
             except Exception as ex:
                 print(ex)
 
