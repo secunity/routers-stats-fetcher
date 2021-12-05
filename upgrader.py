@@ -1,59 +1,12 @@
 import datetime
-import logging
 import os
-import sys
 import shlex
 import re
 import time
 from subprocess import check_output
 
-
-_cnf = {'__log_init__': False}
-
-
-def _init_logger(logfile=None, verbose=False, to_stdout=False, to_stderr=False, **kwargs):
-    logger = logging.getLogger(__name__)
-    if _cnf['__log_init__']:
-        return logger
-
-    log_level = logging.DEBUG if verbose else logging.WARNING
-    logger.setLevel(log_level)
-
-    handlers = []
-    if to_stdout:
-        handlers.append(logging.StreamHandler(sys.stdout))
-    if to_stderr:
-        handlers.append(logging.StreamHandler(sys.stderr))
-    if logfile:
-        handlers.append(logging.FileHandler(logfile))
-
-    for handler in handlers:
-        handler.setLevel(log_level)
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(funcName)s - %(lineno)s - %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-
-    if handlers:
-        _cnf['__log_init__'] = True
-    return logger
-
-class logMeta(type):
-
-    def __getattr__(self, item):
-        if item.upper() in self._methods:
-            return getattr(self._log(), item.lower())
-
-class log(metaclass=logMeta):
-
-    _logger = None
-
-    _methods = ('CRITICAL', 'FATAL', 'ERROR', 'WARNING', 'WARN', 'INFO', 'DEBUG', 'EXCEPTION')
-
-    @classmethod
-    def _log(cls):
-        if not cls._logger:
-            cls._logger = _init_logger(**_cnf)
-        return cls._logger
+from clog import log
+from share import SETTING
 
 
 _defaults = {
@@ -164,7 +117,7 @@ def _start_scheduler(**kwargs):
 
     log.debug('initializing scheduler and jobs')
     global _scheduler
-    _scheduler = BackgroundScheduler(executors={'default': ThreadPoolExecutor(30)},
+    _scheduler = BackgroundScheduler(executors={'default': ThreadPoolExecutor(10)},
                                      job_defaults={'max_instances': 1},
                                      timezone=pytz.utc)
 
@@ -178,34 +131,60 @@ def _start_scheduler(**kwargs):
     log.debug('scheduler and jobs initialized')
 
 
+__args__ = {
+    'logfile': None,
+    'verbose': False,
+    'stdout': False,
+    'stderr': False,
+    'interval_minutes': _defaults['interval_minutes'],
+    'repo': _defaults['repo'],
+    'script_dir': '/opt/$SECUNITYAPP',
+    'supervisor_executor_name': _defaults['supervisor_executor_name']
+}
+
+
+def _parse_args(args):
+    for key, _default in copy.deepcopy(__args__).items():
+        value = args.get(key)
+        if value is None:
+            value = os.environ.get(f'SECUNITY_UPDATER_{key.upper()}')
+            if value is None:
+                value = _default
+            args[key] = value
+    return args
+
+
+def _init_(**kwargs):
+    SETTING.update(type=SETTING.TYPE.LOG, update={k: v for k, v in kwargs.items()
+                                                  if k in ('logfile', 'verbose',
+                                                           'to_stdout', 'stdout', 'to_stderr', 'stderr')})
+    log.init()
+
 if __name__ == '__main__':
     import argparse
     import copy
 
     parser = argparse.ArgumentParser(description='Secunity On-Prem Agent code updater')
 
-    parser.add_argument('-c', '--config', type=str, help='Config file (overriding all other options)')
+    parser.add_argument('-l', '--logfile', type=str, help='File to log to', default=None)
+    parser.add_argument('-v', '--verbose', type=bool, help='Indicates whether to log verbose data', default=None)
 
-    parser.add_argument('-l', '--logfile', type=str, help='File to log to')
-    parser.add_argument('-v', '--verbose', type=bool, help='Indicates whether to log verbose data', default=False)
-    parser.add_argument('--to_stdout', '--stdout', type=str, help='Log messages to stdout', default=False)
-    parser.add_argument('--to_stderr', '--stderr', type=str, help='')
+    parser.add_argument('--stdout', type=str, help='Log messages to stdout', default=None)
+    parser.add_argument('--stderr', type=str, help='Log error messages to stderr', default=None)
 
-    parser.add_argument('-i', '--interval_minutes', type=int, help='Code changes checker interval (minutes)', default=_defaults['interval_minutes'])
+    parser.add_argument('-i', '--interval_minutes', type=int, help='Code changes checker interval (minutes)', default=None)
 
-    parser.add_argument('-r', '--repo', type=str, help='Code git repo')
-    parser.add_argument('-d', '--script_dir', type=str, help='Current script folder')
-    parser.add_argument('-en', '--supervisor_executor_name', type=str, help='The name of the supervisord executor name running the agent')
+    parser.add_argument('-r', '--repo', type=str, help='Code git repo', default=None)
+    parser.add_argument('-d', '--script_dir', type=str, help='Current script folder', default=None)
+    parser.add_argument('-en', '--supervisor_executor_name', type=str,
+                        help='The name of the supervisord executor name running the agent', default=None)
 
     args = parser.parse_args()
-    args = vars(args)
+    args = _parse_args(vars(args))
+    _init_(**args)
 
-    config = args.get('config')
-    if config:
-        config = _parse_config(config)
-        args.update({k: v for k, v in config.items() if v != None})
-
-    _cnf.update({k: v for k, v in copy.deepcopy(args).items()})
+    log.debug('bla bla')
+    log.debug('assd')
 
     _start_scheduler(**args)
 

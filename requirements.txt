@@ -1,4 +1,4 @@
-paramiko==2.7.1
-requests==2.23.0
-APScheduler==3.6.3
+paramiko==2.8.1
+requests==2.26.0
+APScheduler==3.8.1
 jstyleson==0.0.2

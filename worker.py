@@ -245,8 +245,14 @@ def send_result(success, raw_samples, url=None, error=None, **kwargs):
 
     method = kwargs.get('url_method') or _SEND_RESULT_DEFAULTS['url_method']
     func = getattr(requests, method.lower())
-    response = func(url=url, json=result)
-    return 200 <= response.status_code <= 210, error
+    try:
+        response = func(url=url, json=result)
+        status_code = response.status_code
+    except Exception as ex:
+        log.exception(f'failed to send results: "{str(ex)}"')
+        status_code = 9999
+
+    return 200 <= status_code <= 210, error
 
 
 def _start_scheduler(**kwargs):
