@@ -49,6 +49,8 @@ def get_raw_sample(vendor_cls, con_params, host,  **kwargs):
         success, error = True, None
         worker = vendor_cls(**con_params)
         raw_samples = worker.work(**con_params)
+        # to remove dummy
+        raw_samples = raw_samples[1:]
         log.debug(f'finished querying device {host}. response length: {len(raw_samples)}')
         dump = kwargs.get('dump')
         if dump:

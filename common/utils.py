@@ -13,7 +13,7 @@ import json
 # }
 
 _SEND_RESULT_DEFAULTS = {
-    'url_host': '172.20.0.103',
+    'url_host': '172.20.0.201',
     'url_scheme': 'http',
     'url_path': 'fstats1/v1.0.0/in',
     'url_method': 'POST'

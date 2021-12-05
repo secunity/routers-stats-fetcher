@@ -104,7 +104,7 @@ def _start_scheduler(**kwargs):
                                      timezone=pytz.utc)
 
     _scheduler.add_job(func=_work,
-                       trigger=IntervalTrigger(minutes=15),
+                       trigger=IntervalTrigger(seconds=15),
                        kwargs=kwargs,
                        max_instances=1,
                        next_run_time=datetime.datetime.utcnow() + datetime.timedelta(seconds=1))
