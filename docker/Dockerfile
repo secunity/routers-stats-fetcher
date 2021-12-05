@@ -19,7 +19,7 @@ RUN         apt-get update && apt-get upgrade -y && apt-get autoremove -y &&\
             python3 -m pip install supervisor &&\
             python3 -m pip install -r /opt/$SECUNITYAPP/requirements.txt &&\
             chmod 777 /entrypoint.sh &&\
-            chmod 777 /opt/$SECUNITYAPP/worker.py &&\
+            chmod 777 /opt/$SECUNITYAPP/worker_statistics.py &&\
             chmod 777 /opt/$SECUNITYAPP/upgrader.py
 
 ADD         supervisord.conf /etc/supervisor

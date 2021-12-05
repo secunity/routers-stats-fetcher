@@ -1,6 +1,7 @@
 __pycache__/
 venv*/
 *.pyc
-
 secret*.conf
 /tests/
+secunity_rotuters_venv
+debug_read_statistcs.py

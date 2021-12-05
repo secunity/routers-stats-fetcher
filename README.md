@@ -10,8 +10,8 @@ The python script can be initialized with a config file (JSON - see [routers-sta
 
 ### Script/Config Arguments
 ```shell script
-$ ./worker.py -h
-usage: worker.py [-h] [-c CONFIG] [-l LOGFILE] [-v VERBOSE]
+$ ./worker_statistics.py -h
+usage: worker_statistics.py [-h] [-c CONFIG] [-l LOGFILE] [-v VERBOSE]
                  [--to_stdout TO_STDOUT] [--to_stderr TO_STDERR]
                  [--identifier IDENTIFIER] [-s HOST] [-n VENDOR] [-p PORT]
                  [-u USER] [-w PASSWORD] [-k KEY_FILENAME]
@@ -149,17 +149,17 @@ $ vi routers-stats-fetcher.conf
 
 5. Download the python script
 ```shell script
-$ curl -L https://github.com/secunity/routers-stats-fetcher/blob/master/worker.py -o worker.py
+$ curl -L https://github.com/secunity/routers-stats-fetcher/blob/master/worker.py -o worker_statistics.py
 ```
 
 6. Change the script run permissions
 ```shell script
-$ chmod 777 worker.py
+$ chmod 777 worker_statistics.py
 ```
 
 7. Run the script
 ```shell script
-$ python worker.py
+$ python worker_statistics.py
 ``` 
 
 ### Running a Pre-Built Docker Image
