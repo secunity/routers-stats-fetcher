@@ -5,7 +5,8 @@ All rights reserved to Secunity 2021
 '''
 import datetime
 
-from common.utils import log, ERROR, send_result, _parse_env_vars, _set_args_types, _parse_config, _DEFAULTS, _cnf
+from common.utils import log, ERROR, send_result, _parse_env_vars, _set_args_types, _parse_config, _DEFAULTS, _cnf, \
+    base_url
 from router_command import get_vendor_class
 import requests
 try:
@@ -46,7 +47,7 @@ def _work(**kwargs):
     if success:
         success, raw_samples, vendor_cls, vendor = get_vendor_class(**kwargs)
 
-    base_url = 'http://172.20.0.201:5000'
+    # base_url = 'http://172.20.0.201:5000'
     try:
 
         send_params = {k: v for k, v in kwargs.items() if k not in con_params}
