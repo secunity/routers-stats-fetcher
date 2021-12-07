@@ -46,6 +46,11 @@ class MikroTikApiCommandWorker():
         res = self.outgoing_path.set(**flow_to_add)
 
     def add_flow(self, flow_to_add: dict):
+        flow_to_add = {key: str(value) for key, value in flow_to_add.items()}
+        flow_to_add['protocol'] = flow_to_add['protocol'].lower()
+        src_address = flow_to_add.get('src-address')
+        if src_address and 'None' in src_address:
+           del flow_to_add['src-address']
         flow_to_add = {**flow_to_add,
                        'action': 'drop',
                     'chain': 'forward',
@@ -53,7 +58,6 @@ class MikroTikApiCommandWorker():
 
                        }
         res = self.outgoing_path.add(**flow_to_add)
-
 if __name__ == '__main__':
     a = MikroTikApiCommandWorker("172.20.1.10")
     # flow = {

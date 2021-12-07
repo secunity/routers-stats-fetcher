@@ -11,9 +11,17 @@ import json
 #     'url_path': 'fstats1/v1.0.0/in',
 #     'url_method': 'POST'
 # }
+#     base_url = 'http://10.100.102.28:5000'
+
+base_dns = '10.100.102.28'
+base_port = '5000'
+# base_dns = '172.20.1.1'
+# base_port = '6200'
+base_url = f'http://{base_dns}:{base_port}'
 
 _SEND_RESULT_DEFAULTS = {
-    'url_host': '172.20.0.201',
+    'url_host': base_dns,
+    # 'url_host': '172.20.0.201',
     'url_scheme': 'http',
     'url_path': 'fstats1/v1.0.0/in',
     'url_method': 'POST'
@@ -91,7 +99,9 @@ def send_result(success, raw_samples, url=None, error=None, **kwargs):
 
         url_port = url_params.get('url_port') or kwargs.get('url_port')
         if url_port:
-            url_params['url_host'] = f"{url_params['url_host']}:{url_port}"
+            # gilad change port
+            url_params['url_host'] = f"{url_params['url_host']}:{base_port}"
+            # url_params['url_host'] = f"{url_params['url_host']}:{url_port}"
         url = '{url_scheme}://{url_host}/{url_path}'.format(**url_params)
         kwargs.update(url_params)
 
