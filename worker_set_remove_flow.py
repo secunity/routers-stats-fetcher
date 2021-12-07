@@ -3,12 +3,13 @@
 '''
 All rights reserved to Secunity 2021
 '''
-import datetime
+import time
 
-from common.utils import log, ERROR, send_result, _parse_env_vars, _set_args_types, _parse_config, _DEFAULTS, _cnf, \
-    base_url
+from bin.arg_parse import  initialize_start
+from common.api_secunity import send_result
+from common.logs import log
+from common.utils import get_con_params, _start_scheduler_utils
 from router_command import get_vendor_class
-import requests
 try:
     import jstyleson as json
 except:
@@ -17,154 +18,79 @@ except:
 _scheduler = None
 
 
-_SEND_RESULT_DEFAULTS = {
-    'url_host': '172.20.0.103',
-    'url_scheme': 'http',
-    'url_path': 'fstats1/v1.0.0/in',
-    'url_method': 'POST'
-}
+def remove_flows(outgoing_flows_to_remove, worker, **kwargs):
+    raw_samples = worker.work(**kwargs)
+    for _ in outgoing_flows_to_remove:
+        _id = next((flow.get('id') for flow in raw_samples if flow.get('comment') == _), None)
+        try:
+            worker.remove_flow_with_id(_id=_id)
+        except Exception as ex:
+            pass
+    # data = [_.get('comment') for _ in outgoing_flows_to_add]
 
-def get_con_params(**kwargs):
     try:
-        success, error, raw_samples = True, None, []
-
-        con_params = {
-            k: v for k, v in kwargs.items()
-            if not k.startswith('url') and k not in ('identifier',)
-        }
+        suffix_url_path = 'update_remove'
+        sent, msg = send_result(data={'data': outgoing_flows_to_remove}, suffix_url_path=suffix_url_path, **kwargs)
     except Exception as ex:
-        error = f'failed to parse connection params: {str(ex)}'
-        log.exception(error)
-        success = False
-        raw_samples = ERROR.CONERROR
-    return success, raw_samples, error, con_params
+        log.error(ex)
+
+def add_flows(outgoing_flows_to_add, worker, **kwargs):
+    for _ in outgoing_flows_to_add:
+        try:
+            worker.add_flow(flow_to_add=_)
+        except Exception as ex:
+            log.error(ex)
+
+    data = [_.get('comment') for _ in outgoing_flows_to_add]
+    try:
+        suffix_url_path = 'update_set'
+        sent, msg = send_result(data={'data': data}, suffix_url_path=suffix_url_path, **kwargs)
+
+    except Exception as ex:
+        log.error(ex)
+
 
 
 def _work(**kwargs):
     log.debug('starting new iteration')
-    success, raw_samples, error, con_params = get_con_params(**kwargs)
+    success, error, con_params = get_con_params(**kwargs)
 
     if success:
-        success, raw_samples, vendor_cls, vendor = get_vendor_class(**kwargs)
+        success, vendor_cls, vendor = get_vendor_class(**kwargs)
 
-    # base_url = 'http://172.20.0.201:5000'
     try:
-
+        suffix_url_path = 'set_flows'
         send_params = {k: v for k, v in kwargs.items() if k not in con_params}
-        identifier = kwargs.get('identifier')
-        res = requests.get(f'{base_url}/in/flows/set/{identifier}')
-        outgoing_flows = res.json()
-        outgoing_flows_to_add, outgoing_flows_to_remove = outgoing_flows.get('outgoing_flows_to_add'), outgoing_flows.get('outgoing_flows_to_remove')
-        pass
+        send_params['url_method'] = 'GET'
+        sent, body = send_result(success=success, suffix_url_path=suffix_url_path, error=error, **send_params)
+        outgoing_flows_to_add, outgoing_flows_to_remove = body.get('outgoing_flows_to_add'), body.get('outgoing_flows_to_remove')
     except Exception as ex:
         error = f'failed to send results back: {str(ex)}'
         success = False
     if success:
         worker = vendor_cls(**con_params)
         if outgoing_flows_to_add:
-            for _ in outgoing_flows_to_add:
-                try:
-                    worker.add_flow(flow_to_add=_)
-                except Exception as ex:
-                    print(ex)
-
-            data = [_.get('comment') for _ in outgoing_flows_to_add]
-            try:
-                res = requests.post(url=f'{base_url}/in/flows/update_set/{identifier}', json={'data': data})
-            except Exception as ex:
-                print(ex)
+            add_flows(outgoing_flows_to_add=outgoing_flows_to_add, worker=worker, **kwargs)
 
         if outgoing_flows_to_remove:
-            raw_samples = worker.work(**con_params)
-            for _ in outgoing_flows_to_remove:
-                _id = next((flow.get('id') for flow in raw_samples if flow.get('comment') == _), None)
-                try:
-                    worker.remove_flow_with_id(_id=_id)
-                except Exception as ex:
-                    pass
-            # data = [_.get('comment') for _ in outgoing_flows_to_add]
-            data = outgoing_flows_to_remove
-            try:
-                res = requests.post(url=f'{base_url}/in/flows/update_remove/{identifier}', json={'data': data})
-            except Exception as ex:
-                print(ex)
+            remove_flows(outgoing_flows_to_remove=outgoing_flows_to_remove, worker=worker, **kwargs)
 
-    log.debug(f'finished iteration. success: {success}. error: "{error}". len(samples string): {len(raw_samples)}')
+
+    log.debug(f'finished iteration. success: {success}. error: "{error}".')
 
 
 def _start_scheduler(**kwargs):
     from apscheduler.triggers.interval import IntervalTrigger
-    from apscheduler.schedulers.background import BackgroundScheduler
-    from apscheduler.executors.pool import ThreadPoolExecutor
-    import pytz
+    _start_scheduler_utils(_work, IntervalTrigger(seconds=15), **kwargs)
 
-    log.debug('initializing scheduler and jobs')
-    global _scheduler
-    _scheduler = BackgroundScheduler(executors={'default': ThreadPoolExecutor(30)},
-                                     job_defaults={'max_instances': 1},
-                                     timezone=pytz.utc)
 
-    _scheduler.add_job(func=_work,
-                       trigger=IntervalTrigger(seconds=15),
-                       kwargs=kwargs,
-                       max_instances=1,
-                       next_run_time=datetime.datetime.utcnow() + datetime.timedelta(seconds=1))
-
-    _scheduler.start()
-    log.debug('scheduler and jobs initialized')
 
 
 if __name__ == '__main__':
-    import argparse
-    import time
-    import copy
 
-    parser = argparse.ArgumentParser(description='Secunity On-Prem Agent')
-
-    parser.add_argument('-c', '--config', type=str, help='Config file (overriding all other options)',
-                        default=_DEFAULTS['config'])
-
-    parser.add_argument('-l', '--logfile', type=str, help='File to log to', default=None)
-    parser.add_argument('-v', '--verbose', type=bool, help='Indicates whether to log verbose data', default=False)
-    parser.add_argument('-d', '--dump', type=str, help='File path to dump results')
-
-    parser.add_argument('--to_stdout', '--stdout', type=str, help='Log messages to stdout', default=False)
-    parser.add_argument('--to_stderr', '--stderr', type=str, help='')
-
-    parser.add_argument('--identifier', '--id', type=str, help='Device ID', default=None)
-
-    parser.add_argument('-s', '--host', '--ip', type=str, help='Router IP', default=None)
-    parser.add_argument('-p', '--port', type=int, default=None, help='SSH port')
-    parser.add_argument('-n', '--vendor', type=str, default='mikrotik', help='The Vendor of the Router')
-    # parser.add_argument('-n', '--vendor', type=str, default='cisco', help='The Vendor of the Router')
-    parser.add_argument('-u', '--user', '--username', type=str, default=None, help='SSH user')
-    parser.add_argument('-w', '--password', type=str, default=None, help='SSH password')
-    parser.add_argument('-k', '--key_filename', type=str, default=None, help='SSH Key Filename')
-
-    parser.add_argument('--command_prefix', type=str, default=None,
-                        help='The prefix to use when sending commands to the Router using SSH (for instance "cli" in Juniper)')
-
-    parser.add_argument('--url', type=str, help='The URL to use for remove server', default=None)
-    parser.add_argument('--url_scheme', type=str, help='Remote server URL scheme', default=None)
-    parser.add_argument('--url_host', type=str, help='Remote server URL hostname', default=None)
-    parser.add_argument('--url_port', type=int, help='Remote server URL port', default=5000)
-    parser.add_argument('--url_path', type=str, help='Remote server URL path', default=None)
-    parser.add_argument('--url_method', type=str, help='Remote server URL method', default=None)
-
-    args = parser.parse_args()
-    args = vars(args)
-    args = _parse_env_vars(args)
-
-    config = args['config']
-    if config:
-        config = _parse_config(config)
-        args.update(config)
-    args = _set_args_types(args)
-
-    _cnf.update({k: v for k, v in copy.deepcopy(args).items()})
-
-    _start_scheduler(**args)
-
+    args = initialize_start()
+    # _start_scheduler(**args)
+    _work(**args)
     try:
         while True:
             time.sleep(1)
