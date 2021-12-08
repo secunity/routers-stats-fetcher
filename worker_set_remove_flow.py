@@ -4,11 +4,13 @@
 All rights reserved to Secunity 2021
 '''
 import time
+import datetime
 
-from bin.arg_parse import  initialize_start
+from common.arg_parse import  initialize_start
 from common.api_secunity import send_result
 from common.consts import ACTION_FLOW_STATUS
-from common.logs import log
+from common.logs import Log
+from common.schedulers import start_scheduler, add_job, shutdown_scheduler
 from common.utils import get_con_params, _start_scheduler_utils
 from router_command import get_vendor_class
 try:
@@ -32,7 +34,7 @@ def remove_flows(outgoing_flows_to_remove, worker, **kwargs):
             suffix_url_path = f"flows/{ACTION_FLOW_STATUS.REMOVED}/{outgoing_flow_id}"
             sent, msg = send_result(suffix_url_path=suffix_url_path, **kwargs)
         except Exception as ex:
-            log.error(ex)
+            Log.error(ex)
 
 
 def add_flows(outgoing_flows_to_add, worker, **kwargs):
@@ -40,18 +42,18 @@ def add_flows(outgoing_flows_to_add, worker, **kwargs):
         try:
             worker.add_flow(flow_to_add=_)
         except Exception as ex:
-            log.error(ex)
+            Log.error(ex)
 
         try:
             suffix_url_path = f"flows/{ACTION_FLOW_STATUS.APPLIED}/{_.get('comment')}"
             sent, msg = send_result(suffix_url_path=suffix_url_path, **kwargs)
 
         except Exception as ex:
-            log.error(ex)
+            Log.error(ex)
 
 
 def _work(**kwargs):
-    log.debug('starting new iteration')
+    Log.debug('starting new iteration')
     success, error, con_params = get_con_params(**kwargs)
 
     if success:
@@ -75,26 +77,25 @@ def _work(**kwargs):
             remove_flows(outgoing_flows_to_remove=outgoing_flows_to_remove, worker=worker, **kwargs)
 
 
-    log.debug(f'finished iteration. success: {success}. error: "{error}".')
-
-
-def _start_scheduler(**kwargs):
-    from apscheduler.triggers.interval import IntervalTrigger
-    _start_scheduler_utils(_work, IntervalTrigger(seconds=15), **kwargs)
-
+    Log.debug(f'finished iteration. success: {success}. error: "{error}".')
 
 
 
 if __name__ == '__main__':
+    argsparse_params = {_: True for _ in ('host', 'port', 'username', 'password', 'key_filename',
+                                          'vendor', 'command_prefix', 'log', 'url', 'dump')}
 
-    args = initialize_start()
-    # _start_scheduler(**args)
-    _work(**args)
+    args = initialize_start(argsparse_params=argsparse_params)
+
+    start_scheduler(start=True)
+    add_job(func=_work, interval=15, func_kwargs=args, next_run_time=datetime.timedelta(seconds=2))
+
     try:
         while True:
             time.sleep(1)
     except Exception as ex:
-        log.warning(f'Stop signal recieved, shutting down scheduler: {str(ex)}')
-        _scheduler.shutdown()
-        log.warning('scheduler stopped')
-        log.warning('quiting')
+        Log.warning(f'Stop signal received, shutting down')
+        shutdown_scheduler()
+        Log.warning('scheduler stopped')
+        Log.warning('quiting')
+

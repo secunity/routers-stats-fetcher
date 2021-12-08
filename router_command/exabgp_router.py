@@ -107,22 +107,13 @@ class CommandWorker(ABC):
 class CiscoCommandWorker(CommandWorker):
 
     def get_stats_from_router(self, credentials, **kwargs):
-        # command = 'sh flowspec ipv4 detail'
         command = 'show flowspec vrf all ipv4 detail'
         result = self.perform_cli_command(credentials=credentials, command=command, **kwargs)
         return result
-# anyway command prefix will be None
-# _cnf = {'__log_init__': False}
 class JuniperCommandWorker(CommandWorker):
 
     def get_stats_from_router(self, credentials, **kwargs):
         command = 'show firewall filter detail __flowspec_default_inet__'
-        # command_prefix = _cnf.get('command_prefix')
-        # if command_prefix:
-        #     if isinstance(command_prefix, str):
-        #         command = f'{command_prefix} {command}'
-        #     elif isinstance(command_prefix, bool) or command_prefix == 1:
-        #         command = f'cli {command}'
         result = self.perform_cli_command(credentials=credentials, command=command, **kwargs)
         return result
 

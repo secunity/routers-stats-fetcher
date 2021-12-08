@@ -1,3 +1,4 @@
+
 import pytz
 
 try:
@@ -17,7 +18,11 @@ class ACTION_FLOW_STATUS():
     APPLIED = 'applied'
     REMOVED = 'removed'
 
-
+SCHEDULER_SETTINGS = {
+    'start': True,
+    'executor_threadpool_size': 30,
+    'timezone': 'UTC',
+}
 
 class VENDOR:
     CISCO = 'cisco'
@@ -25,7 +30,7 @@ class VENDOR:
     ARISTA = 'arista'
     MIKROTIK = 'mikrotik'
 
-    DEFAULT_TYPE = CISCO
+    DEFAULT_VENDOR = CISCO
 
     __mapping__ = {
         'CISCO': CISCO,
@@ -50,9 +55,10 @@ DEFAULTS = {
 
 
 SEND_RESULT_DEFAULTS = {
-    'url_host': 'api.secunity.io',
     'url_scheme': 'https',
-    'url_path': 'fstats1/v1.0.0/in',
+    'url_host': 'api.secunity.io',
+    'url_port': 443,
+    'url_path': 'in',
     'url_method': 'POST'
 }
 
@@ -107,4 +113,32 @@ SCHEDULER_CONFIG_KEYS = ('thread_pool_executor_size', 'timezone')
 SCHEDULER_CONFIG_KEYS_DEFAULTS = {
     'thread_pool_executor_size': 30,
     'timezone': pytz.UTC
+}
+ARGS_DEFAULTS = {
+    'title': 'Secunity\'s On-Prem Agent',
+    ''
+    'config_title': 'Config file full file path, overriding all other options',
+    'host_title': 'Router IP Address',
+    'port_title': 'Router Connect Port',
+    'username_title': 'Router Connect User',
+    'password_title': 'Router Connect Password',
+    'key_filename_title': 'Router Connect Key Filename',
+    'command_prefix_title': 'The prefix to wrap commands sent to the Router (for instance "cli" in Juniper)',
+    'logfile': None,
+    'logfile_title': 'Full file path to log to',
+    'verbose': False,
+    'verbose_title': 'Indicates whether to log verbose data',
+    'to_stdout_title': 'Log messages to stdout',
+    'to_stdout_value': False,
+    'to_stderr_title': 'Log errors to stderr',
+    'to_stderr_value': False,
+    'dump_title': 'Full file path to dump results',
+    'url_title': 'Secunity\'s API URL',
+    'url_scheme_title': 'Secunity\'s API URL scheme (http/https)',
+    'url_host_title': 'Secunity\'s API URL host',
+    'url_port_title': 'Secunity\'s API URL port',
+    'url_path_title': 'Secunity\'s API URL path',
+    'url_method_title': 'Secunity\'s API HTTP method',
+    'url_method': 'POST'
+
 }

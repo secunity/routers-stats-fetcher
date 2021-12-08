@@ -5,11 +5,12 @@ All rights reserved to Secunity 2021
 '''
 import time
 from collections import Iterable
-
-from bin.arg_parse import initialize_start
+import datetime
+from common.arg_parse import initialize_start
 from common.api_secunity import send_result
-from common.logs import log
-from common.utils import get_con_params, _start_scheduler_utils, ERROR
+from common.logs import Log
+from common.schedulers import start_scheduler, add_job, shutdown_scheduler
+from common.utils import get_con_params, _start_scheduler_utils, ERROR, VENDOR
 
 from router_command import get_vendor_class
 
@@ -23,14 +24,14 @@ _scheduler = None
 
 def parse_raw_sample(success, raw_samples, vendor):
     try:
-        log.debug('formatting results')
+        Log.debug('formatting results')
         if not isinstance(raw_samples, str) and vendor != 'mikrotik':
             if isinstance(raw_samples, Iterable):
                 raw_samples = '\n'.join(raw_samples if isinstance(raw_samples, list) else [_ for _ in raw_samples])
-        log.debug('results formatted')
+        Log.debug('results formatted')
     except Exception as ex:
         error = f'failed to format results: {str(ex)}'
-        log.exception(error)
+        Log.exception(error)
         success = False
         raw_samples = ERROR.FORMATTING
     error = None
@@ -43,11 +44,11 @@ def get_raw_sample(vendor_cls, con_params, host, **kwargs):
         success, error = True, None
         worker = vendor_cls(**con_params)
         raw_samples = worker.work(**con_params)
-        log.debug(f'finished querying device {host}. response length: {len(raw_samples)}')
+        Log.debug(f'finished querying device {host}. response length: {len(raw_samples)}')
 
     except Exception as ex:
         error = f"failed to read router {con_params.get('host')}: {str(ex)}"
-        log.exception(error)
+        Log.exception(error)
         success = False
         raw_samples = ERROR.CONERROR
 
@@ -55,7 +56,7 @@ def get_raw_sample(vendor_cls, con_params, host, **kwargs):
 
 
 def _work(**kwargs):
-    log.debug('starting new iteration')
+    Log.debug('starting new iteration')
     success, error, con_params = get_con_params(**kwargs)
 
     if success:
@@ -64,7 +65,7 @@ def _work(**kwargs):
     if success:
         success, raw_samples, error = get_raw_sample(vendor_cls=vendor_cls, con_params=con_params, **kwargs)
 
-    if success and vendor != 'mikrotik':
+    if success and vendor != VENDOR.MIKROTIK:
         success, raw_samples, error = parse_raw_sample(success, raw_samples, vendor)
 
     try:
@@ -78,25 +79,44 @@ def _work(**kwargs):
         error = f'failed to send results back: {str(ex)}'
         success = False
 
-    log.debug(f'finished iteration. success: {success}. error: "{error}".')
-
-
-def _start_scheduler(**kwargs):
-    from apscheduler.triggers.interval import IntervalTrigger
-    _start_scheduler_utils(_work, IntervalTrigger(minutes=1), **kwargs)
-
-
+    Log.debug(f'finished iteration. success: {success}. error: "{error}".')
 
 if __name__ == '__main__':
+    argsparse_params = {_: True for _ in ('host', 'port', 'username', 'password', 'key_filename',
+                                          'vendor', 'command_prefix', 'log', 'url', 'dump')}
 
-    args = initialize_start()
-    _start_scheduler(**args)
+    args = initialize_start(argsparse_params=argsparse_params)
+
+    start_scheduler(start=True)
+    add_job(func=_work, interval=60, func_kwargs=args, next_run_time=datetime.timedelta(seconds=2))
 
     try:
         while True:
             time.sleep(1)
     except Exception as ex:
-        log.warning(f'Stop signal recieved, shutting down scheduler: {str(ex)}')
-        _scheduler.shutdown()
-        log.warning('scheduler stopped')
-        log.warning('quiting')
+        Log.warning(f'Stop signal received, shutting down')
+        shutdown_scheduler()
+        Log.warning('scheduler stopped')
+        Log.warning('quiting')
+
+
+#
+# def _start_scheduler(**kwargs):
+#     from apscheduler.triggers.interval import IntervalTrigger
+#     _start_scheduler_utils(_work, IntervalTrigger(minutes=1), **kwargs)
+#
+#
+#
+# if __name__ == '__main__':
+#
+#     args = initialize_start()
+#     _start_scheduler(**args)
+#
+#     try:
+#         while True:
+#             time.sleep(1)
+#     except Exception as ex:
+#         log.warning(f'Stop signal recieved, shutting down scheduler: {str(ex)}')
+#         _scheduler.shutdown()
+#         log.warning('scheduler stopped')
+#         log.warning('quiting')

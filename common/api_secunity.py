@@ -1,16 +1,8 @@
 import datetime
 import requests
 
-
-from common.utils import log
-
-_SEND_RESULT_DEFAULTS = {
-    'url_scheme': 'https',
-    'url_host': 'api.secunity.io',
-    'url_port': '5000',
-    'url_path': 'in',
-    'url_method': 'POST'
-}
+from common.consts import SEND_RESULT_DEFAULTS
+from common.utils import Log
 
 
 def _parse_identifier(identifier=None, **kwargs):
@@ -23,23 +15,24 @@ def _parse_identifier(identifier=None, **kwargs):
 # todo need to debug and make it work properly
 def get_default_url(suffix_url_path, identifier, **kwargs):
     url_params = {k: kwargs[k] if kwargs.get(k) or isinstance(kwargs.get(k), bool) else v
-                  for k, v in _SEND_RESULT_DEFAULTS.items()}
+                  for k, v in SEND_RESULT_DEFAULTS.items()}
     url_prefix = '{url_scheme}://{url_host}:{url_port}/{url_path}'.format(**url_params)
     url_path = f'{url_prefix}/{identifier}/{suffix_url_path}'
 
     return url_path
 
 
-def send_result(suffix_url_path, success=True, error=None, data={}, **kwargs):
-    log.debug('starting message sending')
+def send_result(suffix_url_path, success=True, error=None, data=None, **kwargs):
+    Log.debug('starting message sending')
     identifier = _parse_identifier(**kwargs)
 
     url_path = get_default_url(suffix_url_path=suffix_url_path,  **kwargs)
 
 
-    log.debug(f'sending result for identifier {identifier} to {url_path}')
+    Log.debug(f'sending result for identifier {identifier} to {url_path}')
 
-    method = kwargs.get('url_method') or _SEND_RESULT_DEFAULTS['url_method']
+
+    method = kwargs.get('url_method') or SEND_RESULT_DEFAULTS['url_method']
     func = getattr(requests, method.lower())
     try:
         if method == 'GET':
