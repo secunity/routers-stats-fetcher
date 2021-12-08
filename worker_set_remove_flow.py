@@ -5,9 +5,9 @@ All rights reserved to Secunity 2021
 '''
 import time
 
-from bin.arg_parse import  initialize_start
+from common.arg_parse import  initialize_start
 from common.api_secunity import send_result
-from common.logs import log
+from common.logs import Log
 from common.utils import get_con_params, _start_scheduler_utils
 from router_command import get_vendor_class
 try:
@@ -32,14 +32,14 @@ def remove_flows(outgoing_flows_to_remove, worker, **kwargs):
         suffix_url_path = 'update_remove'
         sent, msg = send_result(data={'data': outgoing_flows_to_remove}, suffix_url_path=suffix_url_path, **kwargs)
     except Exception as ex:
-        log.error(ex)
+        Log.error(ex)
 
 def add_flows(outgoing_flows_to_add, worker, **kwargs):
     for _ in outgoing_flows_to_add:
         try:
             worker.add_flow(flow_to_add=_)
         except Exception as ex:
-            log.error(ex)
+            Log.error(ex)
 
     data = [_.get('comment') for _ in outgoing_flows_to_add]
     try:
@@ -47,12 +47,12 @@ def add_flows(outgoing_flows_to_add, worker, **kwargs):
         sent, msg = send_result(data={'data': data}, suffix_url_path=suffix_url_path, **kwargs)
 
     except Exception as ex:
-        log.error(ex)
+        Log.error(ex)
 
 
 
 def _work(**kwargs):
-    log.debug('starting new iteration')
+    Log.debug('starting new iteration')
     success, error, con_params = get_con_params(**kwargs)
 
     if success:
@@ -76,7 +76,7 @@ def _work(**kwargs):
             remove_flows(outgoing_flows_to_remove=outgoing_flows_to_remove, worker=worker, **kwargs)
 
 
-    log.debug(f'finished iteration. success: {success}. error: "{error}".')
+    Log.debug(f'finished iteration. success: {success}. error: "{error}".')
 
 
 def _start_scheduler(**kwargs):
@@ -95,7 +95,7 @@ if __name__ == '__main__':
         while True:
             time.sleep(1)
     except Exception as ex:
-        log.warning(f'Stop signal recieved, shutting down scheduler: {str(ex)}')
+        Log.warning(f'Stop signal recieved, shutting down scheduler: {str(ex)}')
         _scheduler.shutdown()
-        log.warning('scheduler stopped')
-        log.warning('quiting')
+        Log.warning('scheduler stopped')
+        Log.warning('quiting')

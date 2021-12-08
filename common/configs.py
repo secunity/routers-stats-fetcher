@@ -1,7 +1,7 @@
 import copy
 import os
 
-from common.logs import log
+from common.logs import Log
 
 try:
     import jstyleson as json
@@ -63,18 +63,21 @@ def load_env_settings(args: dict) -> dict:
     return args
 
 
-def _parse_config(config, **kwargs):
+def parse_config_file(config, remove_empty=True, **kwargs):
     if not os.path.isfile(config):
         error = f'missing config file: {config}'
-        log.error(error)
+        Log.error(error)
         raise ValueError(error)
 
     try:
         with open(config, 'r') as f:
-            return json.load(f)
+            cnf = json.load(f)
     except Exception as ex:
-        log.exception(f'failed to parse config file: "{config}". error: "{str(ex)}"')
+        Log.exception(f'config file ({config}) is not valid: "{str(ex)}"')
         raise ex
+    if remove_empty:
+        cnf = {k: v for k, v in cnf if v is not None}
+    return cnf
 
 
 _type_parse_methods = {
@@ -104,41 +107,18 @@ _config_types_mutation = {
     'vendor': VENDOR.parse,
     'ip': parse_ip,
 }
-# def _set_args_types(args, rm_keys=False):
-#     if rm_keys:
-#         _rm_keys = []
-#     for key, _type in CONFIG_KEYS.items():
-#         value = args.get(key)
-#         if value is not None:
-#             mutation = _config_types_mutation.get(_type)
-#             if mutation:
-#                 config[key] = mutation(value)
-#             args[key] = _types[_type](value)
-#         elif rm_keys:
-#             _rm_keys.append(key)
-#     if rm_keys:
-#         for key in _rm_keys:
-#             args.pop(key, None)
-#     return args
 
 
 def update_config_types(config: dict,
-                        rm_keys: bool = False,
-                        clone: bool = None):
+                        clone: bool = None) -> dict:
     clone = _parse_clone(clone)
 
-    _rm_keys = []
     for key, _type in CONFIG_KEYS.items():
         value = config.get(key)
         if value is not None:
             mutation = _config_types_mutation.get(_type)
             if mutation:
                 config[key] = mutation(value)
-        elif rm_keys:
-            _rm_keys.append(key)
-
-    for key in _rm_keys:
-        config.pop(key, None)
 
     return copy.deepcopy(config) if clone else config
 

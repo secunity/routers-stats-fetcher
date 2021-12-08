@@ -17,7 +17,7 @@ class LogMeta(type):
         # return method(func=func)
 
 
-class log(metaclass=LogMeta):
+class Log(metaclass=LogMeta):
 
     _logger = None
 
@@ -58,12 +58,12 @@ class log(metaclass=LogMeta):
         cls._logger = logger
         return logger
 def a():
-    log.warning('bla blafsdsfada ')
+    Log.warning('bla blafsdsfada ')
 
 
 if __name__ == '__main__':
-    log.initialize()
+    Log.initialize()
     a()
-    log.warning('bla bla ')
-    log.debug('bla bla ')
-    log.exception('sdfsdfsdfsdf')
+    Log.warning('bla bla ')
+    Log.debug('bla bla ')
+    Log.exception('sdfsdfsdfsdf')

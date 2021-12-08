@@ -21,7 +21,7 @@ class VENDOR:
     ARISTA = 'arista'
     MIKROTIK = 'mikrotik'
 
-    DEFAULT_TYPE = CISCO
+    DEFAULT_VENDOR = CISCO
 
     __mapping__ = {
         'CISCO': CISCO,
@@ -42,12 +42,46 @@ class VENDOR:
 DEFAULTS = {
     'config': 'routers-stats-fetcher.conf',
     'datetime_format': '%Y-%m-%d %H:%M:%S',
+
+    'url_scheme': 'https',
+    'url_host': 'api.secunity.io',
+    'url_port': 443,
+    'url_path': 'in',
+    'url_method': 'POST'
+}
+
+
+ARGS_DEFAULTS = {
+    'title': 'Secunity\'s On-Prem Agent',
+    ''
+    'config_title': 'Config file full file path, overriding all other options',
+    'host_title': 'Router IP Address',
+    'port_title': 'Router Connect Port',
+    'username_title': 'Router Connect User',
+    'password_title': 'Router Connect Password',
+    'key_filename_title': 'Router Connect Key Filename',
+    'command_prefix_title': 'The prefix to wrap commands sent to the Router (for instance "cli" in Juniper)',
+    'logfile': None,
+    'logfile_title': 'Full file path to log to',
+    'verbose': False,
+    'verbose_title': 'Indicates whether to log verbose data',
+    'to_stdout_title': 'Log messages to stdout',
+    'to_stdout_value': False,
+    'to_stderr_title': 'Log errors to stderr',
+    'to_stderr_value': False,
+    'dump_title': 'Full file path to dump results',
+    'url_title': 'Secunity\'s API URL',
+    'url_scheme_title': 'Secunity\'s API URL scheme (http/https)',
+    'url_host_title': 'Secunity\'s API URL host',
+    'url_port_title': 'Secunity\'s API URL port',
+    'url_path_title': 'Secunity\'s API URL path',
+    'url_method_title': 'Secunity\'s API HTTP method',
 }
 
 
 SEND_RESULT_DEFAULTS = {
-    'url_host': 'api.secunity.io',
     'url_scheme': 'https',
+    'url_host': 'api.secunity.io',
     'url_path': 'fstats1/v1.0.0/in',
     'url_method': 'POST'
 }
@@ -80,6 +114,13 @@ CONFIG_KEYS = {
     'url_port': int,
     'url_path': str,
     'url_method': str,
+}
+
+
+SCHEDULER_SETTINGS = {
+    'start': True,
+    'executor_threadpool_size': 30,
+    'timezone': 'UTC',
 }
 
 

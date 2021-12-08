@@ -1,6 +1,10 @@
 import routeros_api
-try: import jstyleson as json
-except: import json
+try:
+    import jstyleson as json
+except:
+    import json
+
+
 class MikroTikApiCommandWorker():
     def __init__(self, host, user='admin', password='', **kwargs):
         # gilad to handle empty password and for the db we have to fill some password

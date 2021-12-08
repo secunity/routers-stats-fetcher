@@ -1,4 +1,4 @@
-from common.utils import log, ERROR
+from common.utils import Log, ERROR
 from router_command.exabgp_router import CiscoCommandWorker, JuniperCommandWorker, AristaCommandWorker
 from router_command.mikrotik_router import MikroTikApiCommandWorker
 
@@ -8,7 +8,7 @@ def get_vendor_class(**kwargs):
 
     vendor = kwargs['vendor'].strip().lower()
     host = kwargs['host']
-    log.debug(f'starting to query device "{host}", vendor: "{vendor}"')
+    Log.debug(f'starting to query device "{host}", vendor: "{vendor}"')
     if vendor == 'cisco':
         vendor_cls = CiscoCommandWorker
     elif vendor == 'mikrotik':
@@ -18,7 +18,7 @@ def get_vendor_class(**kwargs):
     elif vendor == 'arista':
         vendor_cls = AristaCommandWorker
     else:
-        log.exception(f'invalid or unsupported network device vendor: "{vendor}"')
+        Log.exception(f'invalid or unsupported network device vendor: "{vendor}"')
         success = False
 
     return success,  vendor_cls, vendor

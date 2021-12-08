@@ -6,7 +6,7 @@ import json
 import datetime
 
 from common.consts import BOOL_TYPES
-from common.logs import log
+from common.logs import Log
 
 _DEFAULTS = {
     'config': 'routers-stats-fetcher.conf',
@@ -27,7 +27,7 @@ def _start_scheduler_utils(func, time_interval, **kwargs):
     from apscheduler.executors.pool import ThreadPoolExecutor
     import pytz
 
-    log.debug('initializing scheduler and jobs')
+    Log.debug('initializing scheduler and jobs')
     global _scheduler
     _scheduler = BackgroundScheduler(executors={'default': ThreadPoolExecutor(30)},
                                      job_defaults={'max_instances': 1},
@@ -41,7 +41,7 @@ def _start_scheduler_utils(func, time_interval, **kwargs):
                        next_run_time=datetime.datetime.utcnow() + datetime.timedelta(seconds=1))
 
     _scheduler.start()
-    log.debug('scheduler and jobs initialized')
+    Log.debug('scheduler and jobs initialized')
 
 class ERROR:
     CONERROR = 'conerror'
@@ -66,9 +66,10 @@ def get_con_params(**kwargs):
         }
     except Exception as ex:
         error = f'failed to parse connection params: {str(ex)}'
-        log.exception(error)
+        Log.exception(error)
         success = False
     return success, error, con_params
+
 
 def _to_bool(x):
     if x is None:
@@ -82,7 +83,7 @@ def _to_bool(x):
     elif x.lower() == 'false':
         return False
     error = f'invalid bool: "{x}"'
-    log.error(error)
+    Log.error(error)
     raise ValueError(error)
 
 
@@ -94,7 +95,7 @@ def _parse_vendor(vendor):
         return vendor
 
     error = f'invalid vendor: "{vendor}"'
-    log.exception(error)
+    Log.exception(error)
     raise ValueError(error)
 def parse_bool(x: object, parse_str:dict =  False):
     if x is None:
