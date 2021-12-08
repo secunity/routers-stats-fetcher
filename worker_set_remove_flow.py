@@ -7,6 +7,7 @@ import time
 
 from bin.arg_parse import  initialize_start
 from common.api_secunity import send_result
+from common.consts import ACTION_FLOW_STATUS
 from common.logs import log
 from common.utils import get_con_params, _start_scheduler_utils
 from router_command import get_vendor_class
@@ -28,7 +29,7 @@ def remove_flows(outgoing_flows_to_remove, worker, **kwargs):
         except Exception as ex:
             pass
         try:
-            suffix_url_path = f"update_remove/{outgoing_flow_id}"
+            suffix_url_path = f"flows/{ACTION_FLOW_STATUS.REMOVED}/{outgoing_flow_id}"
             sent, msg = send_result(suffix_url_path=suffix_url_path, **kwargs)
         except Exception as ex:
             log.error(ex)
@@ -42,7 +43,7 @@ def add_flows(outgoing_flows_to_add, worker, **kwargs):
             log.error(ex)
 
         try:
-            suffix_url_path = f"update_set/{_.get('comment')}"
+            suffix_url_path = f"flows/{ACTION_FLOW_STATUS.APPLIED}/{_.get('comment')}"
             sent, msg = send_result(suffix_url_path=suffix_url_path, **kwargs)
 
         except Exception as ex:
