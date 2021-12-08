@@ -57,7 +57,6 @@ class MikroTikApiCommandWorker():
            del flow_to_add['src-address']
         flow_to_add = {**flow_to_add,
                        'action': 'drop',
-                    'chain': 'forward',
                     'disabled': 'false',
 
                        }

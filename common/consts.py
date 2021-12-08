@@ -13,6 +13,10 @@ SSH_DEFAULTS = {
     'pty': True,
     'timeout': 30
 }
+class ACTION_FLOW_STATUS():
+    APPLIED = 'applied'
+    REMOVED = 'removed'
+
 
 
 class VENDOR:
