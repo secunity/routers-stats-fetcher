@@ -20,19 +20,19 @@ _scheduler = None
 
 def remove_flows(outgoing_flows_to_remove, worker, **kwargs):
     raw_samples = worker.work(**kwargs)
-    for _ in outgoing_flows_to_remove:
-        _id = next((flow.get('id') for flow in raw_samples if flow.get('comment') == _), None)
+    for outgoing_flow_id in outgoing_flows_to_remove:
+        _id = next((flow.get('id') for flow in raw_samples if flow.get('comment') == outgoing_flow_id), None)
         try:
-            worker.remove_flow_with_id(_id=_id)
+            if _id is not None:
+                worker.remove_flow_with_id(_id=_id)
         except Exception as ex:
             pass
-    # data = [_.get('comment') for _ in outgoing_flows_to_add]
+        try:
+            suffix_url_path = f"update_remove/{outgoing_flow_id}"
+            sent, msg = send_result(suffix_url_path=suffix_url_path, **kwargs)
+        except Exception as ex:
+            log.error(ex)
 
-    try:
-        suffix_url_path = 'update_remove'
-        sent, msg = send_result(data={'data': outgoing_flows_to_remove}, suffix_url_path=suffix_url_path, **kwargs)
-    except Exception as ex:
-        log.error(ex)
 
 def add_flows(outgoing_flows_to_add, worker, **kwargs):
     for _ in outgoing_flows_to_add:
@@ -41,14 +41,12 @@ def add_flows(outgoing_flows_to_add, worker, **kwargs):
         except Exception as ex:
             log.error(ex)
 
-    data = [_.get('comment') for _ in outgoing_flows_to_add]
-    try:
-        suffix_url_path = 'update_set'
-        sent, msg = send_result(data={'data': data}, suffix_url_path=suffix_url_path, **kwargs)
+        try:
+            suffix_url_path = f"update_set/{_.get('comment')}"
+            sent, msg = send_result(suffix_url_path=suffix_url_path, **kwargs)
 
-    except Exception as ex:
-        log.error(ex)
-
+        except Exception as ex:
+            log.error(ex)
 
 
 def _work(**kwargs):
