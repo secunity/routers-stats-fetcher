@@ -4,7 +4,7 @@ from router_command.mikrotik_router import MikroTikApiCommandWorker
 
 
 def get_vendor_class(**kwargs):
-    success, raw_samples = True, []
+    success = True
 
     vendor = kwargs['vendor'].strip().lower()
     host = kwargs['host']
@@ -20,6 +20,5 @@ def get_vendor_class(**kwargs):
     else:
         log.exception(f'invalid or unsupported network device vendor: "{vendor}"')
         success = False
-        raw_samples = ERROR.UNSUPPORTED_VENBDOR
 
-    return success, raw_samples, vendor_cls, vendor
+    return success,  vendor_cls, vendor
