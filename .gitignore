@@ -5,3 +5,4 @@ secret*.conf
 /tests/
 secunity_rotuters_venv
 debug_read_statistcs.py
+routers-stats-fetcher.conf

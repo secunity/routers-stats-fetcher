@@ -1,12 +1,12 @@
 import routeros_api
+
+from router_command.exabgp_router import CommandWorker
+
 try: import jstyleson as json
 except: import json
-class MikroTikApiCommandWorker():
+class MikroTikApiCommandWorker(CommandWorker):
     def __init__(self, host, user='admin', password='', **kwargs):
-        # gilad to handle empty password and for the db we have to fill some password
-        if password == 'aa':
-            password = '' \
-                       ''
+
         self.connection = routeros_api.RouterOsApiPool(host, username=user, password=password)
         self.api = self.connection.get_api()
 

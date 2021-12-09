@@ -159,6 +159,6 @@ def initialize_start(argsparse_params: dict, **kwargs):
     args = update_config_types(config=args)
 
     _cnf.clear()
-    _cnf. update({k: v for k, v in copy.deepcopy(args).items()})
+    _cnf.update({k: v for k, v in copy.deepcopy(args).items()})
     Log.initialize(**args)
     return args

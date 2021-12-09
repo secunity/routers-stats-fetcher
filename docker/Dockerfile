@@ -1,30 +1,30 @@
-FROM        python:3.6
-MAINTAINER  Secunity LTD. (support@secunity.io)
+FROM            python:3.7
+MAINTAINER      Secunity LTD. (support@secunity.io)
 
-ENV         SECUNITYAPP="routers-stats-fetcher"
-ENV         PATH="/opt/$SECUNITYAPP:${PATH}"
-ENV         PYTHONPATH=/opt/$SECUNITYAPP
-ENV         SECUNITY_BRANCH="dump1"
+ENV             SECUNITYAPP="routers-stats-fetcher"
+ENV             PYTHONPATH=/opt/$SECUNITYAPP
+ENV             SECUNITY_BRANCH="mikrotik"
+ENV             SECUNITY_FOLDERS="/etc/secunity /var/log/secunity"
+ENV             PATH="/home/secunity/.local/bin:${PATH}"
+ENV             SECUNITY_PROGRAMS="worker_statistics worker_set_remove_flow"
 
-ADD         entrypoint.sh /
+COPY            env-worker /opt
+COPY            github-access-token /opt
+COPY            install-inside.sh /opt
 
+RUN             bash -x /opt/install-inside.sh && rm /opt/install-inside.sh
 
-RUN         apt-get update && apt-get upgrade -y && apt-get autoremove -y &&\
-            apt-get install -y git python3-pip &&\
-            mkdir -p /etc/supervisor &&\
-            git clone https://github.com/secunity/routers-stats-fetcher.git /opt/$SECUNITYAPP &&\
-            cd /opt/$SECUNITYAPP &&\
-            git checkout $SECUNITY_BRANCH &&\
-            python3 -m pip install --upgrade pip setuptools &&\
-            python3 -m pip install supervisor &&\
-            python3 -m pip install -r /opt/$SECUNITYAPP/requirements.txt &&\
-            chmod 777 /entrypoint.sh &&\
-            chmod 777 /opt/$SECUNITYAPP/worker_statistics.py &&\
-            chmod 777 /opt/$SECUNITYAPP/upgrader.py
+USER            secunity
 
-ADD         supervisord.conf /etc/supervisor
+COPY            install-inside-worker.sh /opt
+RUN             bash -x /opt/install-inside-worker.sh &&\
+                rm /opt/install-inside-worker.sh &&\
+                rm /opt/env-worker
 
-WORKDIR     /opt/$SECUNITYAPP
+USER            root
 
-ENTRYPOINT  ["/entrypoint.sh"]
+WORKDIR         /opt/secunity
+
+ENTRYPOINT      /entrypoint.sh
+
 

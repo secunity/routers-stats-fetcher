@@ -26,26 +26,7 @@ class VENDOR():
     MIKROTIK = 'mikrotik'
 
 
-def _start_scheduler_utils(func, time_interval, **kwargs):
-    from apscheduler.schedulers.background import BackgroundScheduler
-    from apscheduler.executors.pool import ThreadPoolExecutor
-    import pytz
 
-    Log.debug('initializing scheduler and jobs')
-    global _scheduler
-    _scheduler = BackgroundScheduler(executors={'default': ThreadPoolExecutor(30)},
-                                     job_defaults={'max_instances': 1},
-                                     timezone=pytz.utc)
-
-    _scheduler.add_job(func=func,
-                       trigger=time_interval,
-                       # trigger=IntervalTrigger(seconds=15),
-                       kwargs=kwargs,
-                       max_instances=1,
-                       next_run_time=datetime.datetime.utcnow() + datetime.timedelta(seconds=1))
-
-    _scheduler.start()
-    Log.debug('scheduler and jobs initialized')
 
 class ERROR:
     CONERROR = 'conerror'

@@ -1,12 +1,8 @@
 from common.utils import Log, VENDOR
 
-# router_command_type should be in the environment like os.get
-router_command_type : VENDOR = VENDOR.CISCO
 
-if router_command_type == VENDOR.MIKROTIK:
-    from router_command.mikrotik_router import MikroTikApiCommandWorker
-else:
-    from router_command.exabgp_router import CiscoCommandWorker, JuniperCommandWorker, AristaCommandWorker
+from router_command.mikrotik_router import MikroTikApiCommandWorker
+from router_command.exabgp_router import CiscoCommandWorker, JuniperCommandWorker, AristaCommandWorker
 
 def get_vendor_class(**kwargs):
     success = True

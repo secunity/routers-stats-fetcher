@@ -8,12 +8,6 @@ class LogMeta(type):
         if item.upper() in cls._methods:
             func = getattr(cls.logger(), item.lower())
             return func
-        #todo yair take look please
-        method = getattr(cls, '__log')
-        if not method:
-            method = getattr(cls, '_Log__log')
-        return method
-        # return method(func=func)
 
 
 class Log(metaclass=LogMeta):

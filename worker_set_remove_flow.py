@@ -4,6 +4,7 @@
 All rights reserved to Secunity 2021
 '''
 import time
+
 import datetime
 
 from common.arg_parse import  initialize_start
@@ -11,7 +12,7 @@ from common.api_secunity import send_result
 from common.consts import ACTION_FLOW_STATUS
 from common.logs import Log
 from common.schedulers import start_scheduler, add_job, shutdown_scheduler
-from common.utils import get_con_params, _start_scheduler_utils
+from common.utils import get_con_params
 from router_command import get_vendor_class
 try:
     import jstyleson as json

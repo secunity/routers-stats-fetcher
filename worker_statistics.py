@@ -10,7 +10,7 @@ from common.arg_parse import initialize_start
 from common.api_secunity import send_result
 from common.logs import Log
 from common.schedulers import start_scheduler, add_job, shutdown_scheduler
-from common.utils import get_con_params, _start_scheduler_utils, ERROR, VENDOR
+from common.utils import get_con_params, ERROR, VENDOR
 
 from router_command import get_vendor_class
 
