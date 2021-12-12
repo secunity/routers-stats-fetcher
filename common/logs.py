@@ -22,7 +22,8 @@ class Log(metaclass=LogMeta):
 
     @classmethod
     def logger(cls,
-               logfile: str = None,
+               logfile: bool = False,
+               module: str = None,
                verbose: bool = True,
                to_stdout: bool = True,
                to_stderr: bool = False,
@@ -39,7 +40,9 @@ class Log(metaclass=LogMeta):
             handlers.append(logging.StreamHandler(sys.stdout))
         if to_stderr:
             handlers.append(logging.StreamHandler(sys.stderr))
-        if logfile:
+        if module:
+            logfile = module if module else 'secunity.log'
+            logfile = f'/var/log/secunity/{logfile}.log'
             handlers.append(logging.FileHandler(logfile))
 
         for handler in handlers:

@@ -85,9 +85,8 @@ def _work(**kwargs):
 if __name__ == '__main__':
     argsparse_params = {_: True for _ in ('host', 'port', 'username', 'password', 'key_filename',
                                           'vendor', 'command_prefix', 'log', 'url', 'dump')}
-
-    args = initialize_start(argsparse_params=argsparse_params)
-
+    args = initialize_start(argsparse_params=argsparse_params,
+                            module = __file__.split('/')[-1].split('.')[0])
     start_scheduler(start=True)
     add_job(func=_work, interval=15, func_kwargs=args, next_run_time=datetime.timedelta(seconds=2))
 

@@ -152,7 +152,9 @@ def get_argarse(title: str = None, supervisor_path: str = True,
     return args
 
 
-def initialize_start(argsparse_params: dict, **kwargs):
+def initialize_start(argsparse_params: dict,
+                     module: str = None,
+                     **kwargs):
     args = get_argarse(**argsparse_params)
 
     args = load_env_settings(args)
@@ -165,5 +167,5 @@ def initialize_start(argsparse_params: dict, **kwargs):
 
     _cnf.clear()
     _cnf.update({k: v for k, v in copy.deepcopy(args).items()})
-    Log.initialize(**args)
+    Log.initialize(module=module, **args)
     return args
