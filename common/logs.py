@@ -40,19 +40,16 @@ class Log(metaclass=LogMeta):
             handlers.append(logging.StreamHandler(sys.stdout))
         if to_stderr:
             handlers.append(logging.StreamHandler(sys.stderr))
-        if module:
-            logfile = module if module else 'secunity.log'
-            # gilad remove
-            # logfile = f'/var/log/secunity/{logfile}.log'
-            logfile = f'{logfile}.log'
-            handlers.append(logging.FileHandler(logfile))
+
+        logfile = module if module else 'secunity'
+        logfile = f'/var/log/secunity/{logfile}.log'
+        handlers.append(logging.FileHandler(logfile))
 
         for handler in handlers:
             handler.setLevel(log_level)
             formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(funcName)s - %(lineno)s - %(message)s')
             handler.setFormatter(formatter)
             logger.addHandler(handler)
-
         cls._logger = logger
         return logger
 def a():

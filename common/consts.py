@@ -49,9 +49,7 @@ class VENDOR:
 
 
 DEFAULTS = {
-    'config': 'secunity.conf',
-# gilad remove
-    # 'config': '/etc/secunity/secunity.conf',
+    'config': '/etc/secunity/secunity.conf',
     'datetime_format': '%Y-%m-%d %H:%M:%S',
     'supervisor_path': "/etc/supervisor/supervisord.conf"
 
@@ -130,10 +128,10 @@ ARGS_DEFAULTS = {
     'command_prefix_title': 'The prefix to wrap commands sent to the Router (for instance "cli" in Juniper)',
     'logfile': None,
     'logfile_title': 'Full file path to log to',
-    'verbose': False,
+    'verbose': True,
     'verbose_title': 'Indicates whether to log verbose data',
     'to_stdout_title': 'Log messages to stdout',
-    'to_stdout_value': False,
+    'to_stdout_value': True,
     'to_stderr_title': 'Log errors to stderr',
     'to_stderr_value': False,
     'dump_title': 'Full file path to dump results',

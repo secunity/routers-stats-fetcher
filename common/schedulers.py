@@ -20,7 +20,6 @@ def start_scheduler(start: bool = True,
                     threadpool_size: int = None,
                     timezone: object = None,
                     **kwargs):
-    Log.debug('initializing scheduler')
     if start not in (True, False):
         start = SCHEDULER_SETTINGS['start']
     if not threadpool_size or threadpool_size <= 0:
@@ -54,6 +53,7 @@ def add_job(func: callable,
             func_kwargs: dict = None,
             next_run_time: datetime.datetime = None,
             **kwargs) -> Job:
+
     if isinstance(interval, (int, float)):
         trigger = IntervalTrigger(seconds=interval)
     elif isinstance(interval, BaseTrigger):
