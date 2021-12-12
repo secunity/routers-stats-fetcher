@@ -7,7 +7,7 @@ from common.consts import DEFAULTS, VENDOR, ARGS_DEFAULTS, SEND_RESULT_DEFAULTS
 from common.logs import Log
 
 
-def get_argarse(title: str = None,
+def get_argarse(title: str = None, supervisor_path: str = True,
                 config: bool = True, config_title: str = None,
                 host: bool = True, host_title: str = None,
                 port: bool = True, port_title: str = None,
@@ -34,6 +34,11 @@ def get_argarse(title: str = None,
     if not title:
         title = ARGS_DEFAULTS['title']
     parser = argparse.ArgumentParser(description=title)
+
+    if supervisor_path:
+        if not config_title:
+            config_title = ARGS_DEFAULTS['config_title']
+        parser.add_argument('-sv', '--supervisor_path', type=str, help=config_title, default=DEFAULTS['supervisor_path'])
 
     if config:
         if not config_title:

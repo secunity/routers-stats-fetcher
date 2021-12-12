@@ -49,12 +49,12 @@ $ docker pull secunity/cfstats1
 
 ###### Download the config file
 ```shell script
-$ curl -L https://github.com/secunity/routers-stats-fetcher/raw/master/routers-stats-fetcher.conf -o routers-stats-fetcher.conf
+$ curl -L https://github.com/secunity/routers-stats-fetcher/raw/master/routers-stats-fetcher.conf -o secunity.conf
 ```
 
 ###### Edit the config file with your favorite editor
 ```shell script
-$ vi routers-stats-fetcher.conf
+$ vi secunity.conf
 ```
 
 ###### Create a new container from the downloaded image.
@@ -69,7 +69,7 @@ secunity/cfstats1
 
 ###### Copy the edited config file inside the docker container
 ```shell script
-$ docker cp routers-stats-fetcher.conf secunity-probe:/opt/routers-stats-fetcher
+$ docker cp secunity.conf secunity-probe:/opt/routers-stats-fetcher
 ```
 
 ###### Start the container

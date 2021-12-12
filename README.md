@@ -93,12 +93,12 @@ $ docker build --rm -t IMAGE_NAME .
 
 3. Download the config file
 ```shell script
-$ curl -L https://github.com/secunity/routers-stats-fetcher/raw/master/routers-stats-fetcher.conf -o routers-stats-fetcher.conf
+$ curl -L https://github.com/secunity/routers-stats-fetcher/raw/master/routers-stats-fetcher.conf -o secunity.conf
 ```
 
 4. Edit the config file with your favorite editor
 ```shell script
-$ vi routers-stats-fetcher.conf
+$ vi secunity.conf
 ```
 
 5. Create a new container from the local image (replace *CONTAINER_NAME*).
@@ -113,7 +113,7 @@ IMAGE_NAME
 
 6. Copy the edited config file inside the docker container
 ```shell script
-$ docker cp routers-stats-fetcher.conf CONTAINER_NAME:/opt/routers-stats-fetcher/routers-stats-fetcher.conf
+$ docker cp secunity.conf CONTAINER_NAME:/opt/routers-stats-fetcher/secunity.conf
 ```
 
 7. Start the container
@@ -143,8 +143,8 @@ $ pip install -r https://github.com/secunity/routers-stats-fetcher/raw/master/re
 
 4. Download and edit the config file
 ```shell script
-$ curl -L https://github.com/secunity/routers-stats-fetcher/raw/master/routers-stats-fetcher.conf -o routers-stats-fetcher.conf
-$ vi routers-stats-fetcher.conf
+$ curl -L https://github.com/secunity/routers-stats-fetcher/raw/master/routers-stats-fetcher.conf -o secunity.conf
+$ vi secunity.conf
 ```
 
 5. Download the python script

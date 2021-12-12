@@ -55,6 +55,7 @@ chmod 777 /entrypoint.sh
 
 
 chown -R $USER /opt
+chown -R $USER /etc/supervisor
 
 
 

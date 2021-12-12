@@ -49,8 +49,10 @@ class VENDOR:
 
 
 DEFAULTS = {
-    'config': 'routers-stats-fetcher.conf',
+    'config': '/etc/secunity/secunity.conf',
     'datetime_format': '%Y-%m-%d %H:%M:%S',
+    'supervisor_path': "/etc/supervisor/supervisord.conf"
+
 }
 
 

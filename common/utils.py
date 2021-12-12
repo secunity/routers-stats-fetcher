@@ -9,8 +9,8 @@ from common.consts import BOOL_TYPES
 from common.logs import Log
 
 _DEFAULTS = {
-    'config': 'routers-stats-fetcher.conf',
-    # 'config': '/opt/routers-stats-fetcher/routers-stats-fetcher.conf',
+    'config': 'secunity.conf',
+    # 'config': '/opt/routers-stats-fetcher/secunity.conf',
     'datetime_format': '%Y-%m-%d %H:%M:%S',
 }
 
