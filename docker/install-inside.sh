@@ -54,6 +54,61 @@ while :; do sleep 1; done
 chmod 777 /entrypoint.sh
 
 
+
+
+rm /etc/supervisor/supervisord.conf
+cat << 'EOF' >> /etc/supervisor/supervisord.conf
+; supervisor config file
+
+[unix_http_server]
+file=/tmp/supervisor.sock   ; (the path to the socket file)
+chmod=0700                       ; sockef file mode (default 0700)
+
+[supervisord]
+nodaemon=true
+logfile=/var/log/supervisor/supervisord.log ; (main log file;default $CWD/supervisord.log)
+pidfile=/var/run/supervisord.pid ; (supervisord pidfile;default supervisord.pid)
+childlogdir=/var/log/supervisor            ; ('AUTO' child log dir, default $TEMP)
+
+; the below section must remain in the config file for RPC
+; (supervisorctl/web interface) to work, additional interfaces may be
+; added by defining them in separate rpcinterface: sections
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[supervisorctl]
+serverurl=unix:///tmp/supervisor.sock ; use a unix:// URL  for a unix socket
+
+
+[program:worker_set_remove_flow]
+command=/opt/worker_set_remove_flow/venv/bin/python /opt/worker_set_remove_flow/worker_set_remove_flow.py
+environment=PYTHONPATH=/opt/worker_set_remove_flow
+autostart=false
+
+
+[program:worker_statistics]
+command=/opt/worker_statistics/venv/bin/python /opt/worker_statistics/worker_statistics.py
+environment=PYTHONPATH=/opt/worker_statistics
+autostart=true
+
+
+[program:ntp]
+command=bash -c "sleep 5 && service ntp start"
+
+; The [include] section can just contain the "files" setting.  This
+; setting can list multiple files (separated by whitespace or
+; newlines).  It can also contain wildcards.  The filenames are
+; interpreted as relative to this file.  Included files *cannot*
+; include files themselves.
+
+
+# [include]
+# files = /etc/supervisor/conf.d/*.conf
+EOF
+
+
+
+
 chown -R $USER /opt
 chown -R $USER /etc/supervisor
 
