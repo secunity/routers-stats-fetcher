@@ -1,4 +1,5 @@
-from common.utils import Log, VENDOR
+from common.utils import Log
+from common.consts import VENDOR
 
 
 from router_command.mikrotik_router import MikroTikApiCommandWorker

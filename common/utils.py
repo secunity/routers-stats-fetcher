@@ -19,14 +19,6 @@ __BOOL_TYPES__ = (True, False,)
 
 _cnf = {'__log_init__': False}
 
-class VENDOR():
-    CISCO = 'cisco'
-    JUNIPER = 'juniper'
-    ARISTA = 'arista'
-    MIKROTIK = 'mikrotik'
-
-
-
 
 class ERROR:
     CONERROR = 'conerror'
