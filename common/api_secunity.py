@@ -22,7 +22,7 @@ def get_default_url(suffix_url_path, identifier, **kwargs):
     return url_path
 
 
-def send_result(suffix_url_path, success=True, error=None, data=None, **kwargs):
+def send_result(suffix_url_path, success=True, error=None, data={}, **kwargs):
     Log.debug('starting message sending')
     identifier = _parse_identifier(**kwargs)
 

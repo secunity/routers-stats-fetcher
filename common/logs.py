@@ -42,7 +42,9 @@ class Log(metaclass=LogMeta):
             handlers.append(logging.StreamHandler(sys.stderr))
         if module:
             logfile = module if module else 'secunity.log'
-            logfile = f'/var/log/secunity/{logfile}.log'
+            # gilad remove
+            # logfile = f'/var/log/secunity/{logfile}.log'
+            logfile = f'{logfile}.log'
             handlers.append(logging.FileHandler(logfile))
 
         for handler in handlers:

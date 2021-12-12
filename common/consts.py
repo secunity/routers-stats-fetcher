@@ -49,7 +49,9 @@ class VENDOR:
 
 
 DEFAULTS = {
-    'config': '/etc/secunity/secunity.conf',
+    'config': 'secunity.conf',
+# gilad remove
+    # 'config': '/etc/secunity/secunity.conf',
     'datetime_format': '%Y-%m-%d %H:%M:%S',
     'supervisor_path': "/etc/supervisor/supervisord.conf"
 

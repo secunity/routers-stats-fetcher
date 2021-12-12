@@ -75,6 +75,8 @@ def parse_config_file(config, remove_empty=True, **kwargs):
     except Exception as ex:
         Log.exception(f'config file ({config}) is not valid: "{str(ex)}"')
         raise ex
+
+
     if remove_empty:
         cnf = {k: v for k, v in cnf.items() if v is not None}
     return cnf
