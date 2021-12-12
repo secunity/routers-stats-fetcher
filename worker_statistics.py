@@ -8,9 +8,10 @@ from collections import Iterable
 import datetime
 from common.arg_parse import initialize_start
 from common.api_secunity import send_result
+from common.consts import VENDOR
 from common.logs import Log
 from common.schedulers import start_scheduler, add_job, shutdown_scheduler
-from common.utils import get_con_params, ERROR, VENDOR
+from common.utils import get_con_params, ERROR
 
 from router_command import get_vendor_class
 
@@ -80,6 +81,7 @@ def _work(**kwargs):
         success = False
 
     Log.debug(f'finished iteration. success: {success}. error: "{error}".')
+
 
 if __name__ == '__main__':
     argsparse_params = {_: True for _ in ('host', 'port', 'username', 'password', 'key_filename',

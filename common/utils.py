@@ -1,19 +1,7 @@
 import ipaddress
-import sys
-import logging
-import os
-import json
-import datetime
 
 from common.consts import BOOL_TYPES
 from common.logs import Log
-
-_DEFAULTS = {
-    'config': 'secunity.conf',
-    # 'config': '/opt/routers-stats-fetcher/secunity.conf',
-    'datetime_format': '%Y-%m-%d %H:%M:%S',
-}
-
 
 __BOOL_TYPES__ = (True, False,)
 
@@ -73,6 +61,8 @@ def _parse_vendor(vendor):
     error = f'invalid vendor: "{vendor}"'
     Log.exception(error)
     raise ValueError(error)
+
+
 def parse_bool(x: object, parse_str:dict =  False):
     if x is None:
         return None
@@ -96,61 +86,4 @@ def parse_ip(ip, throw=False):
         if throw:
             raise ex
         return None
-
-
-# def _parse_ip(ip, throw=False):
-#     try:
-#         ip = ipaddress.IPv4Address(ip)
-#         return str(ip)
-#     except Exception as ex:
-#         if throw:
-#             log.exception(f'failed to parse ip: "{ip}". error: {str(ex)}')
-#             raise ex
-#         return None
-#
-# _types = {
-#     str: lambda x: x if isinstance(x, str) else str(x),
-#     int: lambda x: x if isinstance(x, int) else int(x),
-#     bool: _to_bool,
-#     'vendor': _parse_vendor,
-#     'ip': _parse_ip,
-# }
-#
-# _conf_keys = {
-#     'config': str,
-#     'logfile': str,
-#     'verbose': bool,
-#     'dump': str,
-#     'to_stderr': bool,
-#     'to_stdout': bool,
-#
-#     'identifier': str,
-#     'host': 'ip',
-#     'port': int,
-#     'vendor': 'vendor',
-#     'username': str,
-#     'password': str,
-#     'command_prefix': str,
-#
-#     'url_scheme': str,
-#     'url_host': 'ip',
-#     'url_port': int,
-#     'url_path': str,
-#     'url_method': str,
-# }
-#
-# def _parse_env_vars(args):
-#     args.update({
-#         _: os.environ.get(f'SECUNITY_{_.upper()}')
-#         for _ in ('config',
-#                   'logfile', 'verbose', 'dump', 'to_stderr', 'to_stdout',
-#                   'identifier',
-#                   'host', 'port', 'vendor', 'username', 'password', 'command_prefix',
-#                   'url_scheme', 'url_host', 'url_port', 'url_path', 'url_method',)
-#         if args.get(_) is None and os.environ.get(f'SECUNITY_{_.upper()}') is not None
-#     })
-#
-#     return args
-#
-#
 
