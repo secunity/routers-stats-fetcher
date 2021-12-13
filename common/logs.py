@@ -44,8 +44,8 @@ class Log(metaclass=LogMeta):
             handlers.append(logging.StreamHandler(sys.stderr))
 
         if logfile_path:
-            logfile = module if module else DEFAULTS["logfile_module"]
-            logfile = f'{logfile_path}{logfile}.log'
+            logfile_name = module if module else DEFAULTS["logfile_module"]
+            logfile = f'{logfile_path}/{logfile_name}.log'
             handlers.append(logging.FileHandler(logfile))
 
         for handler in handlers:

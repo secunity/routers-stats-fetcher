@@ -60,8 +60,7 @@ DEFAULTS = {
 }
 DEBUG_GILAD = True
 if DEBUG_GILAD:
-    DEFAULTS['config'] = 'secunity.conf'
-    DEFAULTS['logfile_path'] = ''
+    DEFAULTS['config'] = 'logs/local.conf'
 
 SEND_RESULT_DEFAULTS = {
     'url_scheme': 'https',
@@ -133,7 +132,7 @@ ARGS_DEFAULTS = {
     'password_title': 'Router Connect Password',
     'key_filename_title': 'Router Connect Key Filename',
     'command_prefix_title': 'The prefix to wrap commands sent to the Router (for instance "cli" in Juniper)',
-    'logfile_path': None,
+    'logfile_path':  "/var/log/secunity",
     'logfile_title': 'Full file path to log to',
     'verbose': True,
     'verbose_title': 'Indicates whether to log verbose data',

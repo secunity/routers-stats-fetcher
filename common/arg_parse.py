@@ -84,7 +84,7 @@ def get_argarse(title: str = None, supervisor_path: str = True,
             logfile_title = ARGS_DEFAULTS['logfile_title']
         if logfile_path_value is None:
             logfile_path_value = ARGS_DEFAULTS['logfile_path']
-        parser.add_argument('-lp', '--logfile_path', type=str, help=logfile_title, default=logfile_path)
+        parser.add_argument('-lp', '--logfile_path', type=str, help=logfile_title, default=logfile_path_value)
 
         if not verbose_title:
             verbose_title = ARGS_DEFAULTS['verbose_title']
