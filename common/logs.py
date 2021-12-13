@@ -1,6 +1,8 @@
 import sys
 import logging
 
+from common.consts import DEFAULTS
+
 
 class LogMeta(type):
 
@@ -22,7 +24,7 @@ class Log(metaclass=LogMeta):
 
     @classmethod
     def logger(cls,
-               logfile: bool = False,
+               logfile_path: str = False,
                module: str = None,
                verbose: bool = True,
                to_stdout: bool = True,
@@ -41,9 +43,10 @@ class Log(metaclass=LogMeta):
         if to_stderr:
             handlers.append(logging.StreamHandler(sys.stderr))
 
-        logfile = module if module else 'secunity'
-        logfile = f'/var/log/secunity/{logfile}.log'
-        handlers.append(logging.FileHandler(logfile))
+        if logfile_path:
+            logfile = module if module else DEFAULTS["logfile_module"]
+            logfile = f'{logfile_path}{logfile}.log'
+            handlers.append(logging.FileHandler(logfile))
 
         for handler in handlers:
             handler.setLevel(log_level)

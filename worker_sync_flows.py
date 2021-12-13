@@ -25,7 +25,6 @@ _scheduler = None
 
 
 
-
 def _work(**kwargs):
     Log.debug('starting new iteration')
     success, error, con_params = get_con_params(**kwargs)
@@ -33,15 +32,20 @@ def _work(**kwargs):
     if success:
         success, vendor_cls, vendor = get_vendor_class(**kwargs)
 
+    if success:
+        worker = vendor_cls(**con_params)
     try:
-        suffix_url_path = 'set_flows'
+        suffix_url_path = 'sync_flows'
         send_params = {k: v for k, v in kwargs.items() if k not in con_params}
-        send_params['url_method'] = 'GET'
-        success, body = send_result(success=success, suffix_url_path=suffix_url_path, error=error, **send_params)
+        raw_samples = worker.work(**kwargs)
+        raw_samples_ids = [_.get(COMMENT) for _ in raw_samples]
+        data = {'flows_ids': raw_samples_ids}
+        success, body = send_result(success=success, suffix_url_path=suffix_url_path, data=data, error=error, **send_params)
         if success:
             outgoing_flows_to_add, outgoing_flows_to_remove = body.get('outgoing_flows_to_add'), body.get('outgoing_flows_to_remove')
         else:
             error = f'failed to send results back: {body}'
+
     except Exception as ex:
         error = f'failed to send results back: {str(ex)}'
         success = False
@@ -65,7 +69,7 @@ if __name__ == '__main__':
                             module=__file__.split('/')[-1].split('.')[0])
 
     start_scheduler(start=True)
-    add_job(func=_work, interval=15, func_kwargs=args, next_run_time=datetime.timedelta(seconds=2))
+    add_job(func=_work, interval=1115, func_kwargs=args, next_run_time=datetime.timedelta(seconds=2))
     try:
         while True:
             time.sleep(1)

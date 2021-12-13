@@ -19,7 +19,7 @@ def get_argarse(title: str = None, supervisor_path: str = True,
                 dump: bool = False,
                 dump_value: str = None, dump_title: str = None,
                 log: bool = True,
-                logfile_value: str = None, logfile_title: str = None,
+                logfile_path_value: str = None, logfile_title: str = None,
                 verbose_value: bool = None, verbose_title: str = None,
                 to_stdout_value: bool = None, to_stdout_title: str = None,
                 to_stderr_value: bool = None, to_stderr_title: str = None,
@@ -82,9 +82,9 @@ def get_argarse(title: str = None, supervisor_path: str = True,
     if log:
         if not logfile_title:
             logfile_title = ARGS_DEFAULTS['logfile_title']
-        if logfile_value is None:
-            logfile_value = ARGS_DEFAULTS['logfile']
-        parser.add_argument('-l', '--logfile', type=str, help=logfile_title, default=logfile_value)
+        if logfile_path_value is None:
+            logfile_path_value = ARGS_DEFAULTS['logfile_path']
+        parser.add_argument('-lp', '--logfile_path', type=str, help=logfile_title, default=logfile_path)
 
         if not verbose_title:
             verbose_title = ARGS_DEFAULTS['verbose_title']

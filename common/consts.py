@@ -7,6 +7,8 @@ try:
 except:
     __SSH_PORT__ = 22
 
+SECUNITY = 'SECUNITY'
+COMMENT = 'comment'
 
 SSH_DEFAULTS = {
     'port': __SSH_PORT__,
@@ -51,10 +53,15 @@ class VENDOR:
 DEFAULTS = {
     'config': '/etc/secunity/secunity.conf',
     'datetime_format': '%Y-%m-%d %H:%M:%S',
-    'supervisor_path': "/etc/supervisor/supervisord.conf"
+    'supervisor_path': "/etc/supervisor/supervisord.conf",
+    'logfile_module': SECUNITY.lower(),
+    # 'logfile_module': "/var/log/secunity/"
 
 }
-
+DEBUG_GILAD = True
+if DEBUG_GILAD:
+    DEFAULTS['config'] = 'secunity.conf'
+    DEFAULTS['logfile_path'] = ''
 
 SEND_RESULT_DEFAULTS = {
     'url_scheme': 'https',
@@ -126,7 +133,7 @@ ARGS_DEFAULTS = {
     'password_title': 'Router Connect Password',
     'key_filename_title': 'Router Connect Key Filename',
     'command_prefix_title': 'The prefix to wrap commands sent to the Router (for instance "cli" in Juniper)',
-    'logfile': None,
+    'logfile_path': None,
     'logfile_title': 'Full file path to log to',
     'verbose': True,
     'verbose_title': 'Indicates whether to log verbose data',

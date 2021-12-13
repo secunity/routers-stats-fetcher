@@ -45,6 +45,8 @@ def send_result(suffix_url_path, success=True, error=None, data={}, **kwargs):
                 'time': datetime.datetime.utcnow().isoformat()
             }
             response = func(url=url_path, json=result)
-        return 200 <= response.status_code <= 210, response.json()
+            success = 200 <= response.status_code <= 210
+        return success, response.json() if success else response.text
     except Exception as ex:
-        return False, str(ex)
+        Log.exception(str(ex))
+        return False, f'url_path: {url_path}'
