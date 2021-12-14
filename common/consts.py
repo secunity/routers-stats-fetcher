@@ -147,6 +147,8 @@ ARGS_DEFAULTS = {
     'url_port_title': 'Secunity\'s API URL port',
     'url_path_title': 'Secunity\'s API URL path',
     'url_method_title': 'Secunity\'s API HTTP method',
-    'url_method': 'POST'
+    'url_method': 'POST',
+    'comment_flow_prefix': SECUNITY,
+    'comment_flow_prefix_title': 'Prefix in comment for flow Secunity\'s will add',
 
 }

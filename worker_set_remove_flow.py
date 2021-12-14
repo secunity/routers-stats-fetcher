@@ -65,7 +65,7 @@ if __name__ == '__main__':
                             module=__file__.split('/')[-1].split('.')[0])
 
     start_scheduler(start=True)
-    add_job(func=_work, interval=15, func_kwargs=args, next_run_time=datetime.timedelta(seconds=2))
+    add_job(func=_work, interval=125, func_kwargs=args, next_run_time=datetime.timedelta(seconds=2))
     try:
         while True:
             time.sleep(1)

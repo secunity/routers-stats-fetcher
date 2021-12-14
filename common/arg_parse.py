@@ -30,7 +30,8 @@ def get_argarse(title: str = None, supervisor_path: str = True,
                 url_port_value: int = None, url_port_title: str = None,
                 url_path_value: str = None, url_path_title: str = None,
                 url_method_value: str = None, url_method_title: str = None,
-                parse: bool = True) -> dict:
+                parse: bool = True,
+                comment_flow_prefix: bool = True,  comment_flow_prefix_title: str = None) -> dict:
     if not title:
         title = ARGS_DEFAULTS['title']
     parser = argparse.ArgumentParser(description=title)
@@ -108,6 +109,11 @@ def get_argarse(title: str = None, supervisor_path: str = True,
         if not dump_title:
             dump_title = ARGS_DEFAULTS['dump_title']
         parser.add_argument('-d', '--dump', type=str, help=dump_title, default=dump_value)
+
+    if comment_flow_prefix:
+        if not comment_flow_prefix_title:
+            comment_flow_prefix_title = ARGS_DEFAULTS['comment_flow_prefix_title']
+        parser.add_argument('-cfp', '--comment_flow_prefix', type=str, help=comment_flow_prefix_title, default=ARGS_DEFAULTS['comment_flow_prefix'])
 
     if url:
         if not url_title:

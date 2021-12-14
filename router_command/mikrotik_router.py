@@ -30,22 +30,22 @@ class MikroTikApiCommandWorker(CommandWorker):
             except Exception as ex:
                 print(ex)
 
-    def get_stats_from_router(self, only_secunity_flows: bool = True, **kwargs):
+    def get_stats_from_router(self, comment_flow_prefix: str, only_secunity_flows: bool = True, **kwargs):
         outgoing_list = self.outgoing_path.get()
         outgoing_list = json.loads(json.dumps(outgoing_list))
         if only_secunity_flows:
-            outgoing_list = [{ **flow, COMMENT: flow.get(COMMENT, 'n_o').split('_')[1]}
-                             for flow in outgoing_list if SECUNITY in flow.get(COMMENT, '')]
+            outgoing_list = [{ **flow, COMMENT: flow.get(COMMENT).split('_')[1]}
+                             for flow in outgoing_list if comment_flow_prefix in flow.get(COMMENT, '')]
 
         return outgoing_list
 
-    def delete_flow(self, _id):
-        _id = str(_id)
-        outgoing_list = self.get_stats_from_router()
-        flow_to_delete = next((_.get('id') for _ in outgoing_list if _.get(COMMENT) == _id), None)
-        if flow_to_delete:
-            res = self.outgoing_path.remove(id=flow_to_delete)
-            return res
+    # def delete_flow(self, _id):
+    #     _id = str(_id)
+    #     outgoing_list = self.get_stats_from_router()
+    #     flow_to_delete = next((_.get('id') for _ in outgoing_list if _.get(COMMENT) == _id), None)
+    #     if flow_to_delete:
+    #         res = self.outgoing_path.remove(id=flow_to_delete)
+    #         return res
 
     def remove_flow_with_id(self, _id):
 
@@ -55,9 +55,11 @@ class MikroTikApiCommandWorker(CommandWorker):
     def set_flow(self, flow_to_add: dict):
         res = self.outgoing_path.set(**flow_to_add)
 
-    def add_flow(self, flow_to_add: dict):
+    def add_flow(self, flow_to_add: dict, comment_flow_prefix: str, **kwargs):
         flow_to_add = {key: str(value) for key, value in flow_to_add.items()}
         flow_to_add['protocol'] = flow_to_add['protocol'].lower()
+        flow_to_add[COMMENT] = f'{comment_flow_prefix}_{flow_to_add[COMMENT]}'
+
         src_address = flow_to_add.get('src-address')
         if src_address and 'None' in src_address:
             del flow_to_add['src-address']

@@ -1,5 +1,5 @@
 from common.api_secunity import send_result
-from common.consts import ACTION_FLOW_STATUS,  COMMENT
+from common.consts import ACTION_FLOW_STATUS, COMMENT, SECUNITY
 from common.logs import Log
 from common.utils import get_con_params
 from router_command import  MikroTikApiCommandWorker
@@ -24,14 +24,14 @@ def remove_flows(outgoing_flows_to_remove, worker, **kwargs):
 
 
 def add_flows(outgoing_flows_to_add, worker, **kwargs):
-    for _ in outgoing_flows_to_add:
+    for flow in outgoing_flows_to_add:
         try:
-            worker.add_flow(flow_to_add=_)
+            worker.add_flow(flow_to_add=flow, **kwargs)
         except Exception as ex:
-            Log.error(f'failed to add flow. flow: {_.get(COMMENT)} .ex:{str(ex)}')
+            Log.error(f'failed to add flow. flow: {flow.get(COMMENT)} .ex:{str(ex)}')
 
         try:
-            suffix_url_path = f"flows/{ACTION_FLOW_STATUS.APPLIED}/{_.get(COMMENT)}"
+            suffix_url_path = f"flows/{ACTION_FLOW_STATUS.APPLIED}/{flow.get(COMMENT)}"
             sent, msg = send_result(suffix_url_path=suffix_url_path, **kwargs)
 
         except Exception as ex:
