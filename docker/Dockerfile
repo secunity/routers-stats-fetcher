@@ -3,10 +3,10 @@ MAINTAINER      Secunity LTD. (support@secunity.io)
 
 ENV             SECUNITYAPP="routers-stats-fetcher"
 ENV             PYTHONPATH=/opt/$SECUNITYAPP
-ENV             SECUNITY_BRANCH="mikrotik"
+ENV             SECUNITY_BRANCH="sync_flows"
 ENV             SECUNITY_FOLDERS="/etc/secunity /var/log/secunity"
 ENV             PATH="/home/secunity/.local/bin:${PATH}"
-ENV             SECUNITY_PROGRAMS="worker_statistics worker_set_remove_flow"
+ENV             SECUNITY_PROGRAMS="worker_statistics worker_set_remove_flow worker_sync_flows"
 
 COPY            env-worker /opt
 COPY            github-access-token /opt

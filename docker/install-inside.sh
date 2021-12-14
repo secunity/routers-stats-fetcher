@@ -79,6 +79,10 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 [supervisorctl]
 serverurl=unix:///tmp/supervisor.sock ; use a unix:// URL  for a unix socket
 
+[program:worker_statistics]
+command=/opt/worker_statistics/venv/bin/python /opt/worker_statistics/worker_statistics.py
+environment=PYTHONPATH=/opt/worker_statistics
+autostart=true
 
 [program:worker_set_remove_flow]
 command=/opt/worker_set_remove_flow/venv/bin/python /opt/worker_set_remove_flow/worker_set_remove_flow.py
@@ -86,10 +90,10 @@ environment=PYTHONPATH=/opt/worker_set_remove_flow
 autostart=false
 
 
-[program:worker_statistics]
-command=/opt/worker_statistics/venv/bin/python /opt/worker_statistics/worker_statistics.py
-environment=PYTHONPATH=/opt/worker_statistics
-autostart=true
+[program:worker_sync_flows]
+command=/opt/worker_sync_flows/venv/bin/python /opt/worker_sync_flows/worker_sync_flows.py
+environment=PYTHONPATH=/opt/worker_sync_flows
+autostart=false
 
 
 [program:ntp]
