@@ -1,3 +1,5 @@
+import collections
+
 import routeros_api
 
 from common.consts import SECUNITY, COMMENT
@@ -7,12 +9,13 @@ try:
     import jstyleson as json
 except:
     import json
+find_duplicate = lambda lst: [item for item, count in collections.Counter(lst).items() if count > 1]
 
 
 class MikroTikApiCommandWorker(CommandWorker):
-    def __init__(self, host, user='admin', password='', **kwargs):
+    def __init__(self, host: str, user: str, password: str, **kwargs):
 
-        self.connection = routeros_api.RouterOsApiPool(host, username=user, password=password)
+        self.connection = routeros_api.RouterOsApiPool(host=host, username=user, password=password)
         self.api = self.connection.get_api()
 
         self.outgoing_path = self.api.get_resource('/ip/firewall/filter')
@@ -26,10 +29,23 @@ class MikroTikApiCommandWorker(CommandWorker):
         flows = self.get_stats_from_router()
         for _ in flows:
             try:
-                self.outgoing_path.remove(id=_.get('id'))
+                self.remove_flow_with_id(id=_.get('id'))
             except Exception as ex:
                 print(ex)
 
+
+    def remove_duplicate(self, outgoing_comments, outgoing_list):
+        to_remove = find_duplicate(outgoing_comments)
+        while to_remove:
+            index = outgoing_comments.index(to_remove.pop())
+            outgoing_comments.pop(index)
+            flow_mikro = outgoing_list.pop(index)
+            _id_mikro = flow_mikro.get('id')
+            self.remove_flow_with_id(_id=_id_mikro)
+
+            if not to_remove:
+                to_remove = find_duplicate(outgoing_comments)
+        return outgoing_list
     def get_stats_from_router(self, comment_flow_prefix: str, only_secunity_flows: bool = True, **kwargs):
         outgoing_list = self.outgoing_path.get()
         outgoing_list = json.loads(json.dumps(outgoing_list))
@@ -37,15 +53,10 @@ class MikroTikApiCommandWorker(CommandWorker):
             outgoing_list = [{ **flow, COMMENT: flow.get(COMMENT).split('_')[1]}
                              for flow in outgoing_list if comment_flow_prefix in flow.get(COMMENT, '')]
 
+            outgoing_comments = [flow.get(COMMENT) for flow in outgoing_list]
+            outgoing_list = self.remove_duplicate(outgoing_comments=outgoing_comments, outgoing_list=outgoing_list)
         return outgoing_list
 
-    # def delete_flow(self, _id):
-    #     _id = str(_id)
-    #     outgoing_list = self.get_stats_from_router()
-    #     flow_to_delete = next((_.get('id') for _ in outgoing_list if _.get(COMMENT) == _id), None)
-    #     if flow_to_delete:
-    #         res = self.outgoing_path.remove(id=flow_to_delete)
-    #         return res
 
     def remove_flow_with_id(self, _id):
 
