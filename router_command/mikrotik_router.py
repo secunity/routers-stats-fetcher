@@ -53,6 +53,7 @@ class MikroTikApiCommandWorker(CommandWorker):
             outgoing_list = [{ **flow, COMMENT: flow.get(COMMENT).split('_')[1]}
                              for flow in outgoing_list if comment_flow_prefix in flow.get(COMMENT, '')]
 
+            outgoing_list = outgoing_list[::-1]
             outgoing_comments = [flow.get(COMMENT) for flow in outgoing_list]
             outgoing_list = self.remove_duplicate(outgoing_comments=outgoing_comments, outgoing_list=outgoing_list)
         return outgoing_list
