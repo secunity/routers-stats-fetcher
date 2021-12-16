@@ -1,7 +1,11 @@
 import datetime
+import os
 import requests
+from requests.exceptions import ConnectionError
 
 from common.consts import SEND_RESULT_DEFAULTS
+from common.health_check import add_line, format_time, after_request, health_check_file_path, \
+    error_health_check_file_path
 from common.utils import Log
 
 
@@ -12,7 +16,6 @@ def _parse_identifier(identifier=None, **kwargs):
     return identifier
 
 
-# todo need to debug and make it work properly
 def get_default_url(suffix_url_path, identifier, **kwargs):
     url_params = {k: kwargs[k] if kwargs.get(k) or isinstance(kwargs.get(k), bool) else v
                   for k, v in SEND_RESULT_DEFAULTS.items()}
@@ -22,7 +25,7 @@ def get_default_url(suffix_url_path, identifier, **kwargs):
     return url_path
 
 
-def send_result(suffix_url_path, success=True, error=None, data={}, **kwargs):
+def send_result(suffix_url_path, success=True, error=None, worker=None, data={}, **kwargs):
     Log.debug('starting message sending')
     identifier = _parse_identifier(**kwargs)
 
@@ -45,8 +48,26 @@ def send_result(suffix_url_path, success=True, error=None, data={}, **kwargs):
                 'time': datetime.datetime.utcnow().isoformat()
             }
             response = func(url=url_path, json=result)
+            if response.status_code == 500:
+                if worker is not None and worker.__class__.__name__ == 'MikroTikApiCommandWorker':
+                    worker.remove_all_flows()
             success = 200 <= response.status_code <= 210
-        return success, response.json() if success else response.text
+        # return success, response.json() if success else response.text
+    except ConnectionError as ex:
+        if 'send_statistics' != suffix_url_path:
+            error = 'remove_all_flow'
+
     except Exception as ex:
         Log.exception(str(ex))
-        return False, f'url_path: {url_path}'
+        error = f'url_path: {url_path}'
+
+    else:
+        if success:
+            after_request(url_path=url_path, file_path=health_check_file_path)
+            return success, response.json()
+        else:
+            after_request(url_path=url_path, file_path=error_health_check_file_path)
+            return success, response.text
+    finally:
+        after_request(url_path=url_path, file_path=error_health_check_file_path)
+        return False, error

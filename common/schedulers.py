@@ -92,6 +92,7 @@ def add_job(func: callable,
                              args=func_args,
                              kwargs=func_kwargs,
                              next_run_time=next_run_time)
+
     return job
 
 
