@@ -15,7 +15,8 @@ def check_lines_size(lines, file_path):
         Log.info(f'remove lines for file: {file_path}')
         os.remove(file_path)
         with open(file_path, 'w', encoding='utf-8') as f:
-            f.writelines(lines[HEALTH_CHECK.MIN_SIZE_LOG:])
+            old_lines = lines[HEALTH_CHECK.MIN_SIZE_LOG:]
+            f.writelines(old_lines)
 
 
 def read_health_check_files(logfile_path: str, ok_health_check: str, error_health_check: str, **kwargs):

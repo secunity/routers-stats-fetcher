@@ -105,7 +105,7 @@ if __name__ == '__main__':
     start_scheduler(start=True)
     next_run_time = datetime.timedelta(seconds=2)
     add_job(func=_work_sync, interval=1115, func_kwargs=args, next_run_time=next_run_time)
-    add_job(func=_work_health_check, interval=321, func_kwargs=args, next_run_time=next_run_time)
+    add_job(func=_work_health_check, interval=12, func_kwargs=args, next_run_time=next_run_time)
     try:
         while True:
             time.sleep(1)

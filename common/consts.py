@@ -82,7 +82,7 @@ DEFAULTS = {
     # 'logfile_module': "/var/log/secunity/"
 
 }
-DEBUG_GILAD = False
+DEBUG_GILAD = True
 if DEBUG_GILAD:
     DEFAULTS['config'] = 'logs/local.conf'
 
