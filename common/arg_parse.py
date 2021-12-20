@@ -80,12 +80,19 @@ def get_argarse(title: str = None, supervisor_path: str = True,
             command_prefix_title = ARGS_DEFAULTS['command_prefix_title']
         parser.add_argument('--command_prefix', type=str, default=None, help=command_prefix_title)
 
+
+
     if log:
+
         if not logfile_title:
             logfile_title = ARGS_DEFAULTS['logfile_title']
         if logfile_path_value is None:
             logfile_path_value = ARGS_DEFAULTS['logfile_path']
         parser.add_argument('-lp', '--logfile_path', type=str, help=logfile_title, default=logfile_path_value)
+        parser.add_argument('-ohc', '--ok_health_check', type=str, help=ARGS_DEFAULTS['ok_health_check_title'],
+                            default=DEFAULTS['ok_health_check_file_name'])
+        parser.add_argument('-ehc', '--error_health_check', type=str, help=ARGS_DEFAULTS['error_health_check_title'],
+                            default=DEFAULTS['error_health_check_file_name'])
 
         if not verbose_title:
             verbose_title = ARGS_DEFAULTS['verbose_title']

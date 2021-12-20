@@ -10,6 +10,7 @@ except:
 SECUNITY = 'SECUNITY'
 COMMENT = 'comment'
 
+
 SSH_DEFAULTS = {
     'port': __SSH_PORT__,
     'warn': False,
@@ -19,6 +20,13 @@ SSH_DEFAULTS = {
 class ACTION_FLOW_STATUS():
     APPLIED = 'applied'
     REMOVED = 'removed'
+
+class HEALTH_CHECK():
+    MAX_SIZE_LOG = 10
+    MIN_SIZE_LOG = MAX_SIZE_LOG // 2
+    SYNC_CAUSE_NO_HEALTH_FOR_LONG_TIME = 60 * 1212
+    FORMAT_TIME = '%Y-%m-%d - %H:%M:%S'
+
 
 SCHEDULER_SETTINGS = {
     'start': True,
@@ -49,16 +57,32 @@ class VENDOR:
             if not result:
                 raise ValueError(f'invalid vendor: "{str(vendor)}"')
 
+class ERROR:
+    CONERROR = 'conerror'
+    INVALID_CON_PARAMS = 'invalid-con-params'
+    UNSUPPORTED_VENBDOR = 'unsupported-vendor'
+    FORMATTING = 'formatting'
 
+    __ALL__ = (CONERROR, INVALID_CON_PARAMS, UNSUPPORTED_VENBDOR, FORMATTING)
+
+    @classmethod
+    def has(cls, value):
+        return value in cls.__ALL__
+
+ok_health_check_file_path = "logs/ok_health_check.txt"
+error_health_check_file_path = "logs/error_health_check.txt"
 DEFAULTS = {
     'config': '/etc/secunity/secunity.conf',
     'datetime_format': '%Y-%m-%d %H:%M:%S',
     'supervisor_path': "/etc/supervisor/supervisord.conf",
     'logfile_module': SECUNITY.lower(),
+    'ok_health_check_file_name': 'ok_health_check.txt',
+    'error_health_check_file_name': 'error_health_check.txt',
+
     # 'logfile_module': "/var/log/secunity/"
 
 }
-DEBUG_GILAD = False
+DEBUG_GILAD = True
 if DEBUG_GILAD:
     DEFAULTS['config'] = 'logs/local.conf'
 
@@ -124,9 +148,10 @@ SCHEDULER_CONFIG_KEYS_DEFAULTS = {
 }
 ARGS_DEFAULTS = {
     'title': 'Secunity\'s On-Prem Agent',
-    ''
     'config_title': 'Config file full file path, overriding all other options',
     'host_title': 'Router IP Address',
+    'ok_health_check_title': 'Log dates of good connection with secunity to file txt',
+    'error_health_check_title': 'Log dates of bad connection with secunity to file txt',
     'port_title': 'Router Connect Port',
     'username_title': 'Router Connect User',
     'password_title': 'Router Connect Password',

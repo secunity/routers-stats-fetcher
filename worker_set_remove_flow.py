@@ -9,11 +9,9 @@ import datetime
 
 from common.arg_parse import  initialize_start
 from common.api_secunity import send_result
-from common.consts import COMMENT
 from common.logs import Log
 from common.schedulers import start_scheduler, add_job, shutdown_scheduler
-from common.utils import get_con_params
-from router_command import get_vendor_class
+from router_command import  get_command_worker
 from router_command.add_remove_mikrotik import add_remove_flow_mikrotik
 
 try:
@@ -28,16 +26,17 @@ _scheduler = None
 
 def _work(**kwargs):
     Log.debug('starting new iteration')
-    success, error, con_params = get_con_params(**kwargs)
 
-    if success:
-        success, vendor_cls, vendor = get_vendor_class(**kwargs)
+    try:
+        worker, con_params = get_command_worker(**kwargs)
+    except Exception as ex:
+        Log.exception(f'error in get_command_worker. error: "{str(ex)}".')
 
     try:
         suffix_url_path = 'set_flows'
         send_params = {k: v for k, v in kwargs.items() if k not in con_params}
         send_params['url_method'] = 'GET'
-        success, body = send_result(success=success, suffix_url_path=suffix_url_path, error=error, **send_params)
+        success, body = send_result(suffix_url_path=suffix_url_path, **send_params)
         if success:
             outgoing_flows_to_add, outgoing_flows_to_remove = body.get('outgoing_flows_to_add'), body.get('outgoing_flows_to_remove')
         else:
@@ -46,7 +45,6 @@ def _work(**kwargs):
         error = f'failed to send results back: {str(ex)}'
         success = False
     if success:
-        worker = vendor_cls(**con_params)
 
         add_remove_flow_mikrotik(outgoing_flows_to_add=outgoing_flows_to_add,
                                  outgoing_flows_to_remove=outgoing_flows_to_remove,

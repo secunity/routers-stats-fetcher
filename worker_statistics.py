@@ -8,12 +8,11 @@ from collections import Iterable
 import datetime
 from common.arg_parse import initialize_start
 from common.api_secunity import send_result
-from common.consts import VENDOR
+from common.consts import VENDOR, ERROR
 from common.logs import Log
 from common.schedulers import start_scheduler, add_job, shutdown_scheduler
-from common.utils import get_con_params, ERROR
 
-from router_command import get_vendor_class
+from router_command import get_command_worker, parse_raw_sample
 
 try:
     import jstyleson as json
@@ -23,62 +22,34 @@ except:
 _scheduler = None
 
 
-def parse_raw_sample(success, raw_samples, vendor):
-    try:
-        Log.debug('formatting results')
-        if not isinstance(raw_samples, str) and vendor != 'mikrotik':
-            if isinstance(raw_samples, Iterable):
-                raw_samples = '\n'.join(raw_samples if isinstance(raw_samples, list) else [_ for _ in raw_samples])
-        Log.debug('results formatted')
-    except Exception as ex:
-        error = f'failed to format results: {str(ex)}'
-        Log.exception(error)
-        success = False
-        raw_samples = ERROR.FORMATTING
-    error = None
-
-    return success, raw_samples, error
-
-
-def get_raw_sample(vendor_cls, con_params, host, **kwargs):
-    try:
-        success, error = True, None
-        worker = vendor_cls(**con_params)
-        raw_samples = worker.work(**con_params)
-        Log.debug(f'finished querying device {host}. response length: {len(raw_samples)}')
-
-    except Exception as ex:
-        error = f"failed to read router {con_params.get('host')}: {str(ex)}"
-        Log.exception(error)
-        success = False
-        raw_samples = ERROR.CONERROR
-
-    return success, raw_samples, error
-
 
 def _work(**kwargs):
     Log.debug('starting new iteration')
-    success, error, con_params = get_con_params(**kwargs)
-
-    if success:
-        success, vendor_cls, vendor = get_vendor_class(**kwargs)
-
-    if success:
-        success, raw_samples, error = get_raw_sample(vendor_cls=vendor_cls, con_params=con_params, **kwargs)
-
-    if success and vendor != VENDOR.MIKROTIK:
-        success, raw_samples, error = parse_raw_sample(success, raw_samples, vendor)
-
     try:
-        suffix_url_path = 'send_statistics'
-        send_params = {k: v for k, v in kwargs.items() if k not in con_params}
-        sent, msg = send_result(success=success, data={'samples': raw_samples}, suffix_url_path=suffix_url_path,
-                                error=error, **send_params)
-        if not sent:
-            success, error = False, msg or f'failed to send message'
+        worker, con_params = get_command_worker(**kwargs)
+        if worker:
+            raw_samples = worker.work(**kwargs)
+
+            raw_samples, error = parse_raw_sample(raw_samples, **kwargs)
+        else:
+            error = True
     except Exception as ex:
-        error = f'failed to send results back: {str(ex)}'
+        error = f'error in get_command_worker. error: "{str(ex)}".'
+
+
+    if error is not None:
         success = False
+    else:
+        try:
+            suffix_url_path = 'send_statistics'
+            send_params = {k: v for k, v in kwargs.items() if k not in con_params}
+            success, msg = send_result( data={'samples': raw_samples}, suffix_url_path=suffix_url_path,
+                                     **send_params)
+            if not success:
+                 error = msg or f'failed to send message'
+        except Exception as ex:
+            error = f'failed to send results back: {str(ex)}'
+            success = False
 
     Log.debug(f'finished iteration. success: {success}. error: "{error}".')
 

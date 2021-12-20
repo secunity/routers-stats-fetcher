@@ -8,18 +8,6 @@ __BOOL_TYPES__ = (True, False,)
 _cnf = {'__log_init__': False}
 
 
-class ERROR:
-    CONERROR = 'conerror'
-    INVALID_CON_PARAMS = 'invalid-con-params'
-    UNSUPPORTED_VENBDOR = 'unsupported-vendor'
-    FORMATTING = 'formatting'
-
-    __ALL__ = (CONERROR, INVALID_CON_PARAMS, UNSUPPORTED_VENBDOR, FORMATTING)
-
-    @classmethod
-    def has(cls, value):
-        return value in cls.__ALL__
-
 
 def get_con_params(**kwargs):
     try:
@@ -27,7 +15,7 @@ def get_con_params(**kwargs):
 
         con_params = {
             k: v for k, v in kwargs.items()
-            if not k.startswith('url') and k not in ('identifier',)
+            if not k.startswith('url') and k not in ('identifier', 'logfile_path', 'ok_health_check', 'error_health_check')
         }
     except Exception as ex:
         error = f'failed to parse connection params: {str(ex)}'
