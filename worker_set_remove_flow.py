@@ -39,6 +39,7 @@ def _work(**kwargs):
         success, body = send_result(suffix_url_path=suffix_url_path, **send_params)
         if success:
             outgoing_flows_to_add, outgoing_flows_to_remove = body.get('outgoing_flows_to_add'), body.get('outgoing_flows_to_remove')
+            error = None
         else:
             error = f'failed to send results back: {body}'
     except Exception as ex:

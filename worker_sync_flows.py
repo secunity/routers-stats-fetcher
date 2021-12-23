@@ -4,12 +4,13 @@
 All rights reserved to Secunity 2021
 '''
 import time
+import os
 
 import datetime
 
 from common.arg_parse import  initialize_start
 from common.api_secunity import send_result
-from common.consts import COMMENT, HEALTH_CHECK
+from common.consts import COMMENT, HEALTH_CHECK, SECUNITY
 from common.health_check import read_health_check_files
 from common.logs import Log
 from common.schedulers import start_scheduler, add_job, shutdown_scheduler
@@ -89,10 +90,16 @@ def _work_health_check(**kwargs):
                     (time_last_check_error and time_last_check_error > time_last_check_ok):
                 success = False
 
-        if not success:
+        env_up_name = f'{kwargs.get("comment_flow_prefix",SECUNITY)}_UP'
+        env_up = os.environ.get(env_up_name, 'False')
+        if not success or env_up == 'False':
             Log.debug(f'timeout for health check, try to do sync')
             if not compere_with_secunity_and_set(**kwargs):
                 worker.remove_all_flows()
+                os.environ[env_up_name] = 'False'
+
+            else:
+                os.environ[env_up_name] = 'True'
 
     Log.debug(f'finished iteration. health check')
 
@@ -105,7 +112,7 @@ if __name__ == '__main__':
     start_scheduler(start=True)
     next_run_time = datetime.timedelta(seconds=2)
     add_job(func=_work_sync, interval=1115, func_kwargs=args, next_run_time=next_run_time)
-    add_job(func=_work_health_check, interval=12, func_kwargs=args, next_run_time=next_run_time)
+    add_job(func=_work_health_check, interval=32, func_kwargs=args, next_run_time=next_run_time)
     try:
         while True:
             time.sleep(1)
